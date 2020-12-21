@@ -19,6 +19,7 @@ function start_client(node::Node, config::Config)
 
     response = register_to_server(node, config)
     @assert response.status == 200
+    @info "[$(node.host):$(node.port)] $(response.body)"
 
     HTTP.serve(router, node.host, node.port)
 end
