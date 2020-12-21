@@ -53,7 +53,7 @@ function fit(central_node::CentralNode, config::Config)
 
         # deserialize the results
         round_weights = [
-            deserialize_payload(central_node.payload_serde, payload, clients[i])
+            deserialize_payload(central_node.payload_serde, clients[i], payload)
             for (i, payload) in enumerate(clients_payload)
         ]
 

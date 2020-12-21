@@ -16,10 +16,10 @@ function build_router(node::Node)
 end
 
 
-function start_client(node::Node, config::Config)
+function start_client(node::Node)
     router = build_router(node)
 
-    response = register_to_server(node, config)
+    response = register_to_server(node)
     @assert response.status == 200
     @info "[$(node.host):$(node.port)] $(String(response.body))"
 
