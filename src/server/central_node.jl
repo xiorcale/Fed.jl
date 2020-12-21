@@ -10,8 +10,11 @@ struct Config
     fraction_clients::Float32
     num_total_clients::Int
 
+    Config(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients) =
+        new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
+
     Config(weights, strategy) = 
-    new(weights, strategy, 100, 0.1, 10)
+    new(weights, strategy, 100, 0.1, 100)
 end
 
 
@@ -19,10 +22,11 @@ struct CentralNode
     host::String
     port::Int
     client_manager::ClientManager
+    evaluate::Function
 
-    CentralNode(host::String, port::Int) = begin
+    CentralNode(host::String, port::Int, evaluate::Function) = begin
         client_manager = ClientManager()
-        return new(host, port, client_manager)
+        return new(host, port, client_manager, evaluate)
     end
 end
 
@@ -41,6 +45,10 @@ function fit(central_node::CentralNode, config::Config)
         round_weights = fit_clients(clients, payload)
 
         global_weights = config.strategy(round_weights)
+
+        # evaluate global model
+        loss, acc = central_node.evaluate(global_weights)
+        @info "loss: $loss, acc: $acc"
     end
 end
 
@@ -74,4 +82,3 @@ function fit_client(client::String, payload::Vector{UInt8})::Vector{Float32}
     response = HTTP.request("POST", endpoint, [], payload)
     return unpack(response.body)
 end
-
