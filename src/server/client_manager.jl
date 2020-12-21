@@ -15,6 +15,7 @@ struct ClientManager
     ClientManager() = begin
         clients = Set{String}()
         cond = Threads.Condition()
+        return new(clients, cond)
     end
 end
 
