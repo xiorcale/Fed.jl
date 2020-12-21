@@ -1,4 +1,6 @@
 using HTTP
+using ..Fed: Serde
+
 
 struct Config
     # machine learning
@@ -22,11 +24,13 @@ struct CentralNode
     host::String
     port::Int
     client_manager::ClientManager
+    payload_serde::PayloadSerde
     evaluate::Function
 
     CentralNode(host::String, port::Int, evaluate::Function) = begin
         client_manager = ClientManager()
-        return new(host, port, client_manager, evaluate)
+        payload_serde = PayloadSerde{UInt8}(0, 255)
+        return new(host, port, client_manager, payload_serde, evaluate)
     end
 end
 
@@ -39,11 +43,20 @@ function fit(central_node::CentralNode, config::Config)
 
         # chose the clients subset for the round
         clients = sample_clients(central_node.client_manager, config.fraction_clients)
-        # weights -> transform -> payload -> serialize
-        payload = pack(global_weights)
 
+        # serialize the global model
+        payload = serialize_payload(central_node.payload_serde, global_weights)
+
+        # ask clients to train on the global model
         round_weights = fit_clients(clients, payload)
 
+        # deserialize the results
+        round_weights = [
+            deserialize_payload(central_node.payload_serde, weights)
+            for weights in round_weights
+        ]
+
+        # update the global model
         global_weights = config.strategy(round_weights)
 
         # evaluate global model
@@ -80,5 +93,5 @@ contained in the `payload`. Returns the serialized updated `weights`.
 function fit_client(client::String, payload::Vector{UInt8})::Vector{Float32}
     endpoint = client * FIT_NODE
     response = HTTP.request("POST", endpoint, [], payload)
-    return unpack(response.body)
+    return response.body
 end

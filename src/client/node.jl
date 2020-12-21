@@ -1,4 +1,6 @@
 using HTTP
+using ..Fed: Serde
+
 
 struct Config
     serverurl::String
@@ -9,8 +11,14 @@ end
 struct Node
     host::String
     port::Int
+    payload_serde::PayloadSerde
 
     fit::Function
+
+    Node(host, port, fit) = begin
+        payload_serde = PayloadSerde{UInt8}(0, 255)
+        new(host, port, payload_serde, fit)
+    end
 end
 
 
