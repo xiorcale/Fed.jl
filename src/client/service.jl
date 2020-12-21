@@ -10,7 +10,7 @@ local data, and return the updated weights to the caller.
 function fit_service(node::Node, request::HTTP.Request)::HTTP.Response
     weights = unpack(request.body) # Vector{Float32}
 
-    weights = node.fit(weights) # updated ector{Float32}
+    weights = node.fit(weights) # updated Vector{Float32}
 
     # GD -> transform -> ... -> pack
     payload = pack(weights)
