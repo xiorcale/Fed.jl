@@ -1,5 +1,6 @@
 using HTTP
 using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
+using ..Fed: QDTYPE, MINVAL, MAXVAL
 
 
 struct Config
@@ -24,12 +25,12 @@ struct CentralNode
     host::String
     port::Int
     client_manager::ClientManager
-    payload_serde::PayloadSerde{UInt8}
+    payload_serde::PayloadSerde{QDTYPE}
     evaluate::Function
 
     CentralNode(host::String, port::Int, evaluate::Function) = begin
         client_manager = ClientManager()
-        payload_serde = PayloadSerde{UInt8}(0x00, 0xff)
+        payload_serde = PayloadSerde{QDTYPE}(MINVAL, MAXVAL)
         return new(host, port, client_manager, payload_serde, evaluate)
     end
 end

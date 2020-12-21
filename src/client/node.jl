@@ -1,5 +1,6 @@
 using HTTP
 using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
+using ..Fed: QDTYPE, MINVAL, MAXVAL
 
 
 struct Config
@@ -11,12 +12,12 @@ end
 struct Node
     host::String
     port::Int
-    payload_serde::PayloadSerde{UInt8}
+    payload_serde::PayloadSerde{QDTYPE}
 
     fit::Function
 
     Node(host, port, fit) = begin
-        payload_serde = PayloadSerde{UInt8}(0x00, 0xff)
+        payload_serde = PayloadSerde{QDTYPE}(MINVAL, MAXVAL)
         new(host, port, payload_serde, fit)
     end
 end
