@@ -2,7 +2,7 @@ module Fed
 
 
 include("common/config.jl")
-export QDTYPE, MINVAL, MAXVAL, REGISTER_NODE, FIT_NODE, CHUNKSIZE, MSBSIZE, SERVERURL
+export QDTYPE, MINVAL, MAXVAL, REGISTER_NODE, FIT_NODE, CHUNKSIZE, MSBSIZE, SERVERURL, GD_BASES
 
 include("common/tools.jl")
 export curry

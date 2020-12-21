@@ -41,6 +41,7 @@ function serialize_payload(p::PayloadSerde, weights::Vector{Float32})::Vector{UI
     q = Quantizer{p.qtype}(p.qmin, p.qmax, minval, maxval)
     qweights = [quantize(q, w) for w in weights]
 
+    # gd compression
     gdfile = compress!(p.store, qweights)
 
     payload = Payload(gdfile, minval, maxval)
@@ -57,8 +58,9 @@ Deserializes `data` with the `payload_serde`.
 function deserialize_payload(p::PayloadSerde, from::String, data::Vector{UInt8})::Vector{Float32}
     payload = unpack(data)
 
+    # gd decompression
     validate_remote!(p.store, payload.gdfile, from)
-    qweights = extract(p.store, gdfile)
+    qweights = extract(p.store, payload.gdfile)
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)

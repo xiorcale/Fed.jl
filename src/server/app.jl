@@ -1,5 +1,7 @@
+using GD
 using HTTP
-using ..Fed: curry, REGISTER_NODE
+using ..Fed: curry, REGISTER_NODE, GD_BASES
+
 
 
 """
@@ -7,10 +9,11 @@ using ..Fed: curry, REGISTER_NODE
 
 Builds the routes to the central node endpoints.
 """
-function build_router(cm::ClientManager)::HTTP.Router
+function build_router(central_node::CentralNode)::HTTP.Router
     router = HTTP.Router()
 
-    HTTP.@register(router, "POST", REGISTER_NODE, curry(register_client!, cm))
+    HTTP.@register(router, "POST", REGISTER_NODE, curry(register_client!, central_node.client_manager))
+    HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, central_node.payload_serde.store))
 
     return router
 end
@@ -22,7 +25,7 @@ end
 Start a Fed.jl HTTP server.
 """
 function start_server(central_node::CentralNode, config::Config)
-    router = build_router(central_node.client_manager)
+    router = build_router(central_node)
 
     # start the HTTP server
     s = @async HTTP.serve(router, central_node.host, central_node.port)

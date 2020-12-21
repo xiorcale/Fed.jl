@@ -14,6 +14,13 @@ const REGISTER_NODE = "/register"
 const FIT_NODE = "/fit"
 
 
+#------------------
+# GD endpoints
+#------------------
+
+const GD_BASES = "/bases"
+
+
 #----------------
 # Serde config
 #----------------
