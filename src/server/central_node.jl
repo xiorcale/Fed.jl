@@ -11,7 +11,7 @@ struct Config
     num_total_clients::Int
 
     Config(weights, strategy) = 
-    new(weights, strategy, 100, 0.1, 100)
+    new(weights, strategy, 100, 0.1, 10)
 end
 
 
@@ -52,7 +52,7 @@ Ask each client from `clients` to train on their local data, by using the model
 weights contained in the `payload`. Returns a `Vector` where each element is the
 serialized weights of one client.
 """
-function fit_clients(clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{UInt8}}
+function fit_clients(clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{Float32}}
     # asynchronously ask the clients subset to train
     tasks = [@async fit_client(client, payload) for client in clients]
     wait.(tasks)
@@ -69,9 +69,9 @@ end
 Asks one `client` to train on its local data, by using the model weights
 contained in the `payload`. Returns the serialized updated `weights`.
 """
-function fit_client(client::String, payload::Vector{UInt8})::Vector{UInt8}
+function fit_client(client::String, payload::Vector{UInt8})::Vector{Float32}
     endpoint = client * FIT_NODE
     response = HTTP.request("POST", endpoint, [], payload)
-    return response.body
+    return unpack(response.body)
 end
 

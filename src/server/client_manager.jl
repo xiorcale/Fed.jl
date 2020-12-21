@@ -65,6 +65,6 @@ Sample randomly `fraction`% of the clients, without replacement. Returns at
 least one client.
 """
 function sample_clients(cm::ClientManager, fraction::Float32)::Vector{String}
-    num_clients = max(round(Int, fraction * num_available_clients(cm), 1))
-    return sample(cm.clients, num, replace=false)
+    num_clients = max(round(Int, fraction * num_available_clients(cm)), 1)
+    return sample(collect(cm.clients), num_clients, replace=false)
 end

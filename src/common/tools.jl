@@ -14,7 +14,7 @@ curry(f, x) = (xs...) -> f(x, xs...)
 Utility function to serialize `data`.
 """
 function pack(data)::Vector{UInt8}
-    buffer = IOBuffer
+    buffer = IOBuffer()
     serialize(buffer, data)
     return take!(buffer)
 end
