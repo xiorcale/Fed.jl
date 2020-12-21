@@ -10,7 +10,7 @@ struct Config
     fraction_clients::Float32
     num_total_clients::Int
 
-    ServerConfig(weights, strategy) = 
+    Config(weights, strategy) = 
     new(weights, strategy, 100, 0.1, 100)
 end
 
