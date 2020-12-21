@@ -1,12 +1,13 @@
 using HTTP
-using Sockets: IPv4, getipaddr
 
 struct Config
     serverurl::String
+
+    Config() = new("http://127.0.0.1:8080")
 end
 
 struct Node
-    host::IPv4
+    host::String
     port::Int
 
     fit::Function
