@@ -3,6 +3,9 @@ module Server
 include("../common/tools.jl")
 include("../common/endpoints_url.jl")
 
+include("startegy/federated_averaging.jl")
+export federated_averaging
+
 include("client_manager.jl")
 export ClientManager, length, num_available_clients, register, sample_clients
 

@@ -20,13 +20,9 @@ struct CentralNode
     port::Int
     client_manager::ClientManager
 
-    config::Config
-
-    Server(host::String, port::Int, weights::Vector{Float32}, strategy::Function) = begin
+    Server(host::String, port::Int) = begin
         client_manager = ClientManager()
-        config = Config(weights, strategy)
-
-        return new(host, port, client_manager, config)
+        return new(host, port, client_manager)
     end
 end
 
