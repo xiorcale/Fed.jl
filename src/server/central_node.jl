@@ -1,5 +1,5 @@
 using HTTP
-using ..Fed: Serde
+using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
 
 
 struct Config
@@ -24,12 +24,12 @@ struct CentralNode
     host::String
     port::Int
     client_manager::ClientManager
-    payload_serde::PayloadSerde
+    payload_serde::PayloadSerde{UInt8}
     evaluate::Function
 
     CentralNode(host::String, port::Int, evaluate::Function) = begin
         client_manager = ClientManager()
-        payload_serde = PayloadSerde{UInt8}(0, 255)
+        payload_serde = PayloadSerde{UInt8}(0x00, 0xff)
         return new(host, port, client_manager, payload_serde, evaluate)
     end
 end
@@ -48,12 +48,12 @@ function fit(central_node::CentralNode, config::Config)
         payload = serialize_payload(central_node.payload_serde, global_weights)
 
         # ask clients to train on the global model
-        round_weights = fit_clients(clients, payload)
+        clients_payload = fit_clients(clients, payload)
 
         # deserialize the results
         round_weights = [
-            deserialize_payload(central_node.payload_serde, weights)
-            for weights in round_weights
+            deserialize_payload(central_node.payload_serde, payload)
+            for payload in clients_payload
         ]
 
         # update the global model
@@ -73,7 +73,7 @@ Ask each client from `clients` to train on their local data, by using the model
 weights contained in the `payload`. Returns a `Vector` where each element is the
 serialized weights of one client.
 """
-function fit_clients(clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{Float32}}
+function fit_clients(clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{UInt8}}
     # asynchronously ask the clients subset to train
     tasks = [@async fit_client(client, payload) for client in clients]
     wait.(tasks)
@@ -90,7 +90,7 @@ end
 Asks one `client` to train on its local data, by using the model weights
 contained in the `payload`. Returns the serialized updated `weights`.
 """
-function fit_client(client::String, payload::Vector{UInt8})::Vector{Float32}
+function fit_client(client::String, payload::Vector{UInt8})::Vector{UInt8}
     endpoint = client * FIT_NODE
     response = HTTP.request("POST", endpoint, [], payload)
     return response.body

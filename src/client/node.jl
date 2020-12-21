@@ -1,5 +1,5 @@
 using HTTP
-using ..Fed: Serde
+using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
 
 
 struct Config
@@ -11,12 +11,12 @@ end
 struct Node
     host::String
     port::Int
-    payload_serde::PayloadSerde
+    payload_serde::PayloadSerde{UInt8}
 
     fit::Function
 
     Node(host, port, fit) = begin
-        payload_serde = PayloadSerde{UInt8}(0, 255)
+        payload_serde = PayloadSerde{UInt8}(0x00, 0xff)
         new(host, port, payload_serde, fit)
     end
 end

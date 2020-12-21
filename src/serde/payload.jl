@@ -1,6 +1,3 @@
-using JLD
-
-
 struct Payload
     data::Vector{UInt8}
     minval::Float32
@@ -10,11 +7,12 @@ end
 
 struct PayloadSerde{T <: Real}
     # quantization
+    qtype::Type{T}
     qmin::T
     qmax::T
 
     PayloadSerde{T}(qmin::T, qmax::T) where T <: Real = begin
-        return new(qmin, qmax)
+        return new(T, qmin, qmax)
     end
 end
 
@@ -30,7 +28,7 @@ function serialize_payload(p::PayloadSerde, weights::Vector{Float32})::Vector{UI
     maxval = maximum(weights)
 
     # quantize weights
-    q = Quantizer{p.T}(p.qmin, p.qmax, minval, maxval)
+    q = Quantizer{p.qtype}(p.qmin, p.qmax, minval, maxval)
     qweights = [quantize(q, w) for w in weights]
 
     payload = Payload(qweights, minval, maxval)
@@ -48,7 +46,7 @@ function deserialize_payload(p::PayloadSerde, data::Vector{UInt8})::Vector{Float
     payload = unpack(data)
 
     # dequantize weights
-    q = Quantizer{p.T}(p.qmin, p.qmax, payload.minval, payload.maxval)
+    q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)
     weights = [dequantize(q, w) for w in payload.data]
 
     return weights

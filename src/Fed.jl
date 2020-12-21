@@ -1,7 +1,8 @@
 module Fed
 
 include("serde/Serde.jl")
-using .Serde
+using .Serde:  PayloadSerde, serialize_payload, deserialize_payload
+export PayloadSerde, serialize_payload, deserialize_payload
 
 include("server/Server.jl")
 include("client/Client.jl")
