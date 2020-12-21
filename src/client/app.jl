@@ -1,4 +1,6 @@
 using HTTP
+using ..Fed: curry, FIT_NODE
+
 
 """
     build_router(node)

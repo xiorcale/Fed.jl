@@ -1,6 +1,6 @@
 using HTTP
 using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
-using ..Fed: QDTYPE, MINVAL, MAXVAL
+using ..Fed: QDTYPE, MINVAL, MAXVAL, REGISTER_NODE
 
 
 struct Config

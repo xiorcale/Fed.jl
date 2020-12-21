@@ -1,4 +1,5 @@
 using HTTP
+using ..Fed: curry, REGISTER_NODE
 
 
 """

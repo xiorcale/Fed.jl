@@ -1,9 +1,6 @@
 module Server
 
 
-include("../common/tools.jl")
-include("../common/endpoints_url.jl")
-
 include("startegy/federated_averaging.jl")
 export federated_averaging
 
@@ -18,5 +15,6 @@ export register_client
 
 include("app.jl")
 export start_server
+
 
 end # module
