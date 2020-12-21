@@ -20,7 +20,7 @@ struct CentralNode
     port::Int
     client_manager::ClientManager
 
-    Server(host::String, port::Int) = begin
+    CentralNode(host::String, port::Int) = begin
         client_manager = ClientManager()
         return new(host, port, client_manager)
     end
