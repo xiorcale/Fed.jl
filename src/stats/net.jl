@@ -20,7 +20,7 @@ function update_vanilla_netstats!(
 )
     model_size = mlstats.num_weights * sizeof(QDTYPE)
     num_comm = general_stats.num_clients_per_round * round_num
-    uplink = num_uplink * model_size
+    uplink = num_comm * model_size
     push!(stats.uplink, uplink)
 
     # without GD, we have a symetrical communication...

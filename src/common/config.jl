@@ -1,6 +1,6 @@
 using  CRC32c
 using SHA
-
+# using JLD
 
 #------------------
 # Server endpoints
@@ -30,17 +30,17 @@ const GD_BASES = "/bases"
 #----------------
 
 # quantization
-# const QDTYPE = UInt8
-# const MINVAL = 0x00
-# const MAXVAL = 0xFF
+const QDTYPE = UInt8
+const MINVAL = 0x00
+const MAXVAL = 0xFF
 
 # const QDTYPE = UInt16
 # const MINVAL = 0x0000
 # const MAXVAL = 0xFFFF
 
-const QDTYPE = Float32
-const MINVAL = -1.0
-const MAXVAL = 1.0
+# const QDTYPE = Float32
+# const MINVAL = -1.0
+# const MAXVAL = 1.0
 
 # permutation
 const PERMUTATIONS_FILE = "./permutations.jld"
@@ -51,3 +51,20 @@ const FINGERPRINT = sha1
 
 const CHUNKSIZE = 256
 const MSBSIZE = 0x05
+
+
+# function save_config()
+#     save(
+#         "config.jld",
+#         "serverurl", SERVERURL,
+#         "register_node", REGISTER_NODE,
+#         "fit_node", FIT_NODE,
+#         "gd_bases", GD_BASES,
+#         "qdtype", QDTYPE,
+#         "minval", MINVAL,
+#         "maxval", MAXVAL,
+#         "permutations_file", PERMUTATIONS_FILE,
+#         "chunksize", CHUNKSIZE,
+#         "msbsize", MSBSIZE
+#     )
+# end

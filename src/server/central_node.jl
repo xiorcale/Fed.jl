@@ -2,7 +2,7 @@ using JLD
 using HTTP
 using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
 using ..Fed: QDTYPE, MINVAL, MAXVAL, FIT_NODE
-using ..Fed: AllStats, update_stats!
+using ..Fed: AllStats, update_stats!, QStats, update_qstats!
 
 
 struct Config
@@ -32,19 +32,26 @@ struct CentralNode
     host::String
     port::Int
     client_manager::ClientManager
-    payload_serde::VanillaPayloadSerde
+    payload_serde::QuantizedPayloadSerde{QDTYPE}
     evaluate::Function
 
     config::Config
 
-     # stats
-    #  stats::AllStats
+    # stats
+    stats::QStats
 
     CentralNode(host::String, port::Int, evaluate::Function, weights::Vector{Float32}, strategy::Function) = begin
         client_manager = ClientManager()
-        payload_serde = VanillaPayloadSerde()
+        payload_serde = QuantizedPayloadSerde{QDTYPE}(MINVAL, MAXVAL)
 
         config = Config(weights, strategy)
+
+        stats = QStats(
+            config.num_comm_rounds,
+            config.num_total_clients,
+            max(round(Int, config.fraction_clients * config.num_total_clients), 1),
+            length(weights)
+        )
 
         # stats = AllStats(
         #     config.num_comm_rounds,
@@ -60,7 +67,7 @@ struct CentralNode
             payload_serde, 
             evaluate,
             config,
-            # stats
+            stats
         )
     end
 end
@@ -76,6 +83,7 @@ function fit(central_node::CentralNode)
         clients = sample_clients(central_node.client_manager, central_node.config.fraction_clients)
 
         # serialize the global model
+        req_weights = global_weights
         payload = serialize_payload(central_node.payload_serde, global_weights)
 
         # ask clients to train on the global model
@@ -94,7 +102,7 @@ function fit(central_node::CentralNode)
         loss, acc = central_node.evaluate(global_weights)
         @info "loss: $loss, acc: $acc"
 
-        # # record statistics
+        # record statistics
         # database_length = length(central_node.payload_serde.store.database)
         # num_requested_bases = central_node.payload_serde.store.num_requested_bases
         # num_unknown_bases = central_node.payload_serde.store.num_unknown_bases
@@ -109,7 +117,9 @@ function fit(central_node::CentralNode)
         #     num_unknown_bases 
         # )
 
-        # save("stats.jld", "stats", central_node.stats)
+        update_qstats!(central_node.stats, round_num, acc, loss, req_weights, round_weights)
+
+        save("stats.jld", "stats", central_node.stats)
     end
 end
 

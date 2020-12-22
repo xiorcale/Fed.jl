@@ -26,7 +26,10 @@ end
 
 Update the stats related to quantization.
 """
-function update_qstats!(stats::QStats, acc::Float32, loss::Float32)
+function update_qstats!(stats::QStats, round_num::Int, acc::Float32, loss::Float32, req_weights::Vector{Float32}, res_weights::Vector{Vector{Float32}})
     update_mlstats!(stats.mlstats, acc, loss)
-    update_netstats!(stats.netstats, stats.general_stats)
+    update_vanilla_netstats!(stats.netstats, stats.general_stats, stats.mlstats, round_num)
+
+    push!(stats.round_changes, compute_round_changes(req_weights, res_weights))
+    push!(stats.changes_per_weights, compute_changes_per_weights(req_weights, res_weights))
 end

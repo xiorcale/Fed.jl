@@ -14,8 +14,8 @@ export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde,
 
 
 include("stats/Stats.jl")
-using .Stats: AllStats, update_stats!
-export AllStats, update_stats!
+using .Stats: AllStats, update_stats!, QStats, update_qstats!
+export AllStats, update_stats!, QStats, update_qstats!
 
 
 include("server/Server.jl")

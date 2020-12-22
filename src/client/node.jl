@@ -6,12 +6,12 @@ using ..Fed: QDTYPE, MINVAL, MAXVAL, REGISTER_NODE, SERVERURL
 struct Node
     host::String
     port::Int
-    payload_serde::VanillaPayloadSerde
+    payload_serde::QuantizedPayloadSerde{QDTYPE}
 
     fit::Function
 
     Node(host, port, fit) = begin
-        payload_serde = VanillaPayloadSerde()
+        payload_serde = QuantizedPayloadSerde{QDTYPE}(MINVAL, MAXVAL)
         new(host, port, payload_serde, fit)
     end
 end
