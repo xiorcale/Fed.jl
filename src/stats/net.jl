@@ -7,12 +7,35 @@ end
 
 
 """
-    update_netstats!(stats, general_stats, gdstats, round_num)
+    update_vanilla_netstats(stats, round_num)
 
 Updates the network statistics by tracking the uplink/downlink traffic of the
-round.
+round, assuming no gd has been applied.
 """
-function update_netstats!(
+function update_vanilla_netstats!(
+    stats::NetStats,
+    general_stats::GeneralStats,
+    mlstats::MLStats,
+    round_num::Int
+)
+    model_size = mlstats.num_weights * sizeof(QDTYPE)
+    num_comm = general_stats.num_clients_per_round * round_num
+    uplink = num_uplink * model_size
+    push!(stats.uplink, uplink)
+
+    # without GD, we have a symetrical communication...
+    downlink = uplink
+    push!(stats.downlink, downlink)
+end
+
+
+"""
+    update_gd_netstats!(stats, general_stats, gdstats, round_num)
+
+Updates the network statistics by tracking the uplink/downlink traffic of the
+round, taking the gd into account (i.e. by using the store statistics).
+"""
+function update_gd_netstats!(
     stats::NetStats,
     general_stats::GeneralStats,
     gdstats::GDStoreStats,

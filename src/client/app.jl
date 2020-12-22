@@ -12,7 +12,7 @@ function build_router(node::Node)
     router = HTTP.Router()
 
     HTTP.@register(router, "POST", FIT_NODE, curry(fit_service, node))
-    HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, node.payload_serde.store))
+    # HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, node.payload_serde.store))
 
     return router
 end

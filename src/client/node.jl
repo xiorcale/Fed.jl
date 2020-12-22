@@ -1,17 +1,17 @@
 using HTTP
-using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
+using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
 using ..Fed: QDTYPE, MINVAL, MAXVAL, REGISTER_NODE, SERVERURL
 
 
 struct Node
     host::String
     port::Int
-    payload_serde::PayloadSerde{QDTYPE}
+    payload_serde::VanillaPayloadSerde
 
     fit::Function
 
     Node(host, port, fit) = begin
-        payload_serde = PayloadSerde{QDTYPE}(MINVAL, MAXVAL)
+        payload_serde = VanillaPayloadSerde()
         new(host, port, payload_serde, fit)
     end
 end

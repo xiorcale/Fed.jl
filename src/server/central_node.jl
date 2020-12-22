@@ -1,6 +1,6 @@
 using JLD
 using HTTP
-using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
+using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
 using ..Fed: QDTYPE, MINVAL, MAXVAL, FIT_NODE
 using ..Fed: AllStats, update_stats!
 
@@ -32,27 +32,27 @@ struct CentralNode
     host::String
     port::Int
     client_manager::ClientManager
-    payload_serde::PayloadSerde{QDTYPE}
+    payload_serde::VanillaPayloadSerde
     evaluate::Function
 
     config::Config
 
      # stats
-     stats::AllStats
+    #  stats::AllStats
 
     CentralNode(host::String, port::Int, evaluate::Function, weights::Vector{Float32}, strategy::Function) = begin
         client_manager = ClientManager()
-        payload_serde = PayloadSerde{QDTYPE}(MINVAL, MAXVAL)
+        payload_serde = VanillaPayloadSerde()
 
         config = Config(weights, strategy)
 
-        stats = AllStats(
-            config.num_comm_rounds,
-            config.num_total_clients,
-            max(round(Int, config.fraction_clients * config.num_total_clients), 1),
-            length(weights),
-            payload_serde.store.compressor
-        )
+        # stats = AllStats(
+        #     config.num_comm_rounds,
+        #     config.num_total_clients,
+        #     max(round(Int, config.fraction_clients * config.num_total_clients), 1),
+        #     length(weights),
+        #     # payload_serde.store.compressor
+        # )
 
         return new(
             host, port, 
@@ -60,7 +60,7 @@ struct CentralNode
             payload_serde, 
             evaluate,
             config,
-            stats
+            # stats
         )
     end
 end
@@ -83,7 +83,7 @@ function fit(central_node::CentralNode)
 
         # deserialize the results
         round_weights = [
-            deserialize_payload(central_node.payload_serde, clients[i], payload)
+            deserialize_payload(central_node.payload_serde, payload) # clients[i])
             for (i, payload) in enumerate(clients_payload)
         ]
 
@@ -94,22 +94,22 @@ function fit(central_node::CentralNode)
         loss, acc = central_node.evaluate(global_weights)
         @info "loss: $loss, acc: $acc"
 
-        # record statistics
-        database_length = length(central_node.payload_serde.store.database)
-        num_requested_bases = central_node.payload_serde.store.num_requested_bases
-        num_unknown_bases = central_node.payload_serde.store.num_unknown_bases
+        # # record statistics
+        # database_length = length(central_node.payload_serde.store.database)
+        # num_requested_bases = central_node.payload_serde.store.num_requested_bases
+        # num_unknown_bases = central_node.payload_serde.store.num_unknown_bases
         
-        update_stats!(
-            central_node.stats,
-            round_num,
-            acc,
-            loss,
-            database_length,
-            num_requested_bases,
-            num_unknown_bases 
-        )
+        # update_stats!(
+        #     central_node.stats,
+        #     round_num,
+        #     acc,
+        #     loss,
+        #     database_length,
+        #     num_requested_bases,
+        #     num_unknown_bases 
+        # )
 
-        save("stats.jld", "stats", central_node.stats)
+        # save("stats.jld", "stats", central_node.stats)
     end
 end
 

@@ -21,7 +21,7 @@ mutable struct GDStoreStats
         gdfile, bases = GD.compress(compressor, rand(QDTYPE, num_weights))
 
         basesize = length(bases[1]) * dtype_size
-        hashsize = length(gdfile.hashes[1])
+        hashsize = length(gdfile.hashes[1]) # hashes are always UInt8 -> 1 Byte
         deviation_size = length(gdfile.deviations[1]) * dtype_size
 
         gdfile_length = length(gdfile.hashes)

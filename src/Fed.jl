@@ -9,8 +9,8 @@ export curry
 
 
 include("serde/Serde.jl")
-using .Serde:  PayloadSerde, serialize_payload, deserialize_payload
-export PayloadSerde, serialize_payload, deserialize_payload
+using .Serde:  PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
+export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
 
 
 include("stats/Stats.jl")

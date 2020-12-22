@@ -4,14 +4,14 @@ using JLD
 using SHA
 
 
-struct Payload
+struct GDPayload
     gdfile::GDFile
     minval::Float32
     maxval::Float32
 end
 
 
-struct PayloadSerde{T <: Real}
+struct GDPayloadSerde{T <: Real}
     # quantization
     qtype::Type{T}
     qmin::T
@@ -21,7 +21,7 @@ struct PayloadSerde{T <: Real}
 
     store::Store
 
-    PayloadSerde{T}(qmin::T, qmax::T) where T <: Real = begin
+    GDPayloadSerde{T}(qmin::T, qmax::T) where T <: Real = begin
         quantizer = GD.Transform.Quantizer{QDTYPE}(CHUNKSIZE, MSBSIZE)
 
         permutations = JLD.load(PERMUTATIONS_FILE, "permutations")
@@ -35,11 +35,12 @@ end
 
 
 """
-    serialize_payload(payload_serde, weights)
+    serialize_payload(::GDPayloadSerde, weights)
 
-Serializes `weights` with the `payload_serde`.
+Serializes `weights` with the `GDPayloadSerde` where quantization and 
+generalized deduplication are applied before serialization.
 """
-function serialize_payload(p::PayloadSerde, weights::Vector{Float32})::Vector{UInt8}
+function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{UInt8}
     # find quantization range
     minval = minimum(weights)
     maxval = maximum(weights)
@@ -61,11 +62,12 @@ end
 
 
 """
-    deserialize_payload(payload_serde, from, data)
+    deserialize_payload(GDPayloadSerde, data, from)
 
-Deserializes `data` with the `payload_serde`.
+Deserializes `data` with the `GDPayloadSerde` where generalized deduplication
+and dequantization are applied before deserialization.
 """
-function deserialize_payload(p::PayloadSerde, from::String, data::Vector{UInt8})::Vector{Float32}
+function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
     # gd decompression

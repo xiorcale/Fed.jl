@@ -7,12 +7,13 @@ include("general.jl")
 include("ml.jl")
 include("gd.jl")
 include("net.jl")
+include("quantization_stats.jl")
 
 
 struct AllStats
     general_stats::GeneralStats
     mlstats::MLStats
-    gdstore_stats::GDStoreStats
+    # gdstore_stats::GDStoreStats
     netstats::NetStats
 
     AllStats(
@@ -20,11 +21,11 @@ struct AllStats
         num_clients::Int,
         num_clients_per_round::Int,
         num_weights::Int,
-        compressor::Compressor
+        # compressor::Compressor
     ) = new(
         GeneralStats(num_comm_round, num_clients, num_clients_per_round),
         MLStats(num_weights),
-        GDStoreStats(compressor, num_weights),
+        # GDStoreStats(compressor, num_weights),
         NetStats()
     )
 end

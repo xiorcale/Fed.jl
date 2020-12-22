@@ -30,17 +30,17 @@ const GD_BASES = "/bases"
 #----------------
 
 # quantization
-const QDTYPE = UInt8
-const MINVAL = 0x00
-const MAXVAL = 0xFF
+# const QDTYPE = UInt8
+# const MINVAL = 0x00
+# const MAXVAL = 0xFF
 
 # const QDTYPE = UInt16
 # const MINVAL = 0x0000
 # const MAXVAL = 0xFFFF
 
-# const QDTYPE = Float32
-# const MINVAL = -1.0
-# CONST MAXVAL = 1.0
+const QDTYPE = Float32
+const MINVAL = -1.0
+const MAXVAL = 1.0
 
 # permutation
 const PERMUTATIONS_FILE = "./permutations.jld"

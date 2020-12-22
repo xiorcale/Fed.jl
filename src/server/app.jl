@@ -13,7 +13,7 @@ function build_router(central_node::CentralNode)::HTTP.Router
     router = HTTP.Router()
 
     HTTP.@register(router, "POST", REGISTER_NODE, curry(register_client!, central_node.client_manager))
-    HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, central_node.payload_serde.store))
+    # HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, central_node.payload_serde.store))
 
     return router
 end
