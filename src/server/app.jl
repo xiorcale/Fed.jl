@@ -24,17 +24,17 @@ end
 
 Start a Fed.jl HTTP server.
 """
-function start_server(central_node::CentralNode, config::Config)
+function start_server(central_node::CentralNode)
     router = build_router(central_node)
 
     # start the HTTP server
     s = @async HTTP.serve(router, central_node.host, central_node.port)
 
     # wait for all the clients to join...
-    wait_for(central_node.client_manager, config.num_total_clients)
+    wait_for(central_node.client_manager, central_node.config.num_total_clients)
 
     # federated training
-    fit(central_node, config)
+    fit(central_node)
 
     # stop the HTTP server
     @async Base.throwto(s,  InterruptException())

@@ -13,6 +13,11 @@ using .Serde:  PayloadSerde, serialize_payload, deserialize_payload
 export PayloadSerde, serialize_payload, deserialize_payload
 
 
+include("stats/Stats.jl")
+using .Stats: AllStats, update_stats!
+export AllStats, update_stats!
+
+
 include("server/Server.jl")
 include("client/Client.jl")
 

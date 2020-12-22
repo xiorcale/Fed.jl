@@ -1,6 +1,8 @@
+using JLD
 using HTTP
 using ..Fed: PayloadSerde, serialize_payload, deserialize_payload
 using ..Fed: QDTYPE, MINVAL, MAXVAL, FIT_NODE
+using ..Fed: AllStats, update_stats!
 
 
 struct Config
@@ -16,8 +18,13 @@ struct Config
     Config(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients) =
         new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
 
-    Config(weights, strategy) = 
-    new(weights, strategy, 100, 0.1, 100)
+    Config(weights, strategy) = begin
+        num_comm_rounds = 100
+        fraction_clients = 0.1
+        num_total_clients = 100
+        new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
+    end
+    
 end
 
 
@@ -28,22 +35,45 @@ struct CentralNode
     payload_serde::PayloadSerde{QDTYPE}
     evaluate::Function
 
-    CentralNode(host::String, port::Int, evaluate::Function) = begin
+    config::Config
+
+     # stats
+     stats::AllStats
+
+    CentralNode(host::String, port::Int, evaluate::Function, weights::Vector{Float32}, strategy::Function) = begin
         client_manager = ClientManager()
         payload_serde = PayloadSerde{QDTYPE}(MINVAL, MAXVAL)
-        return new(host, port, client_manager, payload_serde, evaluate)
+
+        config = Config(weights, strategy)
+
+        stats = AllStats(
+            config.num_comm_rounds,
+            config.num_total_clients,
+            max(round(Int, config.fraction_clients * config.num_total_clients), 1),
+            length(weights),
+            payload_serde.store.compressor
+        )
+
+        return new(
+            host, port, 
+            client_manager, 
+            payload_serde, 
+            evaluate,
+            config,
+            stats
+        )
     end
 end
 
 
-function fit(central_node::CentralNode, config::Config)
-    global_weights = config.weights
-    
-    for round_num in 1:config.num_comm_rounds
+function fit(central_node::CentralNode)
+    global_weights = central_node.config.weights
+
+    for round_num in 1:central_node.config.num_comm_rounds
         @info "Communication round $round_num"
 
         # chose the clients subset for the round
-        clients = sample_clients(central_node.client_manager, config.fraction_clients)
+        clients = sample_clients(central_node.client_manager, central_node.config.fraction_clients)
 
         # serialize the global model
         payload = serialize_payload(central_node.payload_serde, global_weights)
@@ -58,11 +88,28 @@ function fit(central_node::CentralNode, config::Config)
         ]
 
         # update the global model
-        global_weights = config.strategy(round_weights)
+        global_weights = central_node.config.strategy(round_weights)
 
         # evaluate global model
         loss, acc = central_node.evaluate(global_weights)
         @info "loss: $loss, acc: $acc"
+
+        # record statistics
+        database_length = length(central_node.payload_serde.store.database)
+        num_requested_bases = central_node.payload_serde.store.num_requested_bases
+        num_unknown_bases = central_node.payload_serde.store.num_unknown_bases
+        
+        update_stats!(
+            central_node.stats,
+            round_num,
+            acc,
+            loss,
+            database_length,
+            num_requested_bases,
+            num_unknown_bases 
+        )
+
+        save("stats.jld", "stats", central_node.stats)
     end
 end
 
