@@ -1,5 +1,6 @@
-using ..Fed: CHUNKSIZE, MSBSIZE, QDTYPE
+using ..Fed: CHUNKSIZE, MSBSIZE, QDTYPE, FINGERPRINT, PERMUTATIONS_FILE
 using GD
+using JLD
 using SHA
 
 
@@ -16,13 +17,19 @@ struct PayloadSerde{T <: Real}
     qmin::T
     qmax::T
 
+    permutations::Vector{Int64}
+
     store::Store
 
     PayloadSerde{T}(qmin::T, qmax::T) where T <: Real = begin
         quantizer = GD.Transform.Quantizer{QDTYPE}(CHUNKSIZE, MSBSIZE)
-        compressor = Compressor(CHUNKSIZE, quantizer, sha1)
+
+        permutations = JLD.load(PERMUTATIONS_FILE, "permutations")
+
+        compressor = Compressor(CHUNKSIZE, quantizer, FINGERPRINT)
         store = Store(compressor, Dict(), 0, 0)
-        return new(T, qmin, qmax, store)
+
+        return new(T, qmin, qmax, permutations, store)
     end
 end
 
@@ -40,6 +47,9 @@ function serialize_payload(p::PayloadSerde, weights::Vector{Float32})::Vector{UI
     # quantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, minval, maxval)
     qweights = [quantize(q, w) for w in weights]
+
+    # shift high entropy weights
+    permute!(qweights, p.permutations)
 
     # gd compression
     gdfile = compress!(p.store, qweights)
@@ -61,6 +71,9 @@ function deserialize_payload(p::PayloadSerde, from::String, data::Vector{UInt8})
     # gd decompression
     validate_remote!(p.store, payload.gdfile, from)
     qweights = extract(p.store, payload.gdfile)
+
+    # shift back high entropy weights
+    invpermute!(qweights, p.permutations)
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)
