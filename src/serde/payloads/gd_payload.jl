@@ -1,4 +1,3 @@
-using ..Fed: CHUNKSIZE, MSBSIZE, QDTYPE, FINGERPRINT, PERMUTATIONS_FILE
 using GD
 using JLD
 using SHA
@@ -21,12 +20,12 @@ struct GDPayloadSerde{T <: Real}
 
     store::Store
 
-    GDPayloadSerde{T}(qmin::T, qmax::T) where T <: Real = begin
-        quantizer = GD.Transform.Quantizer{QDTYPE}(CHUNKSIZE, MSBSIZE)
+    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, permutations_file::String) where T <: Real = begin
+        quantizer = GD.Transform.Quantizer{QDTYPE}(chunksize, msbsize)
 
-        permutations = JLD.load(PERMUTATIONS_FILE, "permutations")
+        permutations = JLD.load(permutations_file, "permutations")
 
-        compressor = Compressor(CHUNKSIZE, quantizer, FINGERPRINT)
+        compressor = Compressor(chunksize, quantizer, fingerprint)
         store = Store(compressor, Dict(), 0, 0)
 
         return new(T, qmin, qmax, permutations, store)
@@ -41,12 +40,8 @@ Serializes `weights` with the `GDPayloadSerde` where quantization and
 generalized deduplication are applied before serialization.
 """
 function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{UInt8}
-    # find quantization range
-    minval = minimum(weights)
-    maxval = maximum(weights)
-
     # quantize weights
-    q = Quantizer{p.qtype}(p.qmin, p.qmax, minval, maxval)
+    q = Quantizer{p.qtype}(weights)
     qweights = [quantize(q, w) for w in weights]
 
     # shift high entropy weights

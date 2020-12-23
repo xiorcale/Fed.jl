@@ -1,57 +1,80 @@
 using JLD
 using HTTP
 using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
-using ..Fed: QDTYPE, MINVAL, MAXVAL, FIT_NODE
-using ..Fed: AllStats, update_stats!, QStats, update_qstats!
+# using ..Fed: QDTYPE, QMIN, QMAX, FIT_NODE
+# using ..Fed: AllStats, update_stats!, QStats, update_qstats!
+using ..Fed: Config
+
+# struct Config
+#     # machine learning
+#     weights::Vector{Float32}
+#     strategy::Function
+
+#     # networking
+#     num_comm_rounds::Int
+#     fraction_clients::Float32
+#     num_total_clients::Int
+
+#     Config(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients) =
+#         new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
+
+#     Config(weights, strategy) = begin
+#         num_comm_rounds = 100
+#         fraction_clients = 0.1
+#         num_total_clients = 100
+#         new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
+#     end
+    
+# end
 
 
-struct Config
+struct CentralNode{T <: Real}
+    # networking
+    host::String
+    port::Int
+    client_manager::ClientManager
+    # payload_serde::QuantizedPayloadSerde{QDTYPE}
+
     # machine learning
     weights::Vector{Float32}
-    strategy::Function
+    startegy::Function
 
-    # networking
+    # federated learning
     num_comm_rounds::Int
     fraction_clients::Float32
     num_total_clients::Int
 
-    Config(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients) =
-        new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
+    # hook
+    evaluate::Function
 
-    Config(weights, strategy) = begin
+    config::Config{T}
+
+    # stats
+    # stats::QStats
+
+    CentralNode{T}(
+        host::String,
+        port::Int,
+        weights::Vector{Float32},
+        strategy::Function,
+        evaluate::Function,
+        config::Config{T}
+    ) where T <: Real = begin
+
+        client_manager = ClientManager()
+       
         num_comm_rounds = 100
         fraction_clients = 0.1
         num_total_clients = 100
-        new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
-    end
-    
-end
-
-
-struct CentralNode
-    host::String
-    port::Int
-    client_manager::ClientManager
-    payload_serde::QuantizedPayloadSerde{QDTYPE}
-    evaluate::Function
-
-    config::Config
-
-    # stats
-    stats::QStats
-
-    CentralNode(host::String, port::Int, evaluate::Function, weights::Vector{Float32}, strategy::Function) = begin
-        client_manager = ClientManager()
-        payload_serde = QuantizedPayloadSerde{QDTYPE}(MINVAL, MAXVAL)
 
         config = Config(weights, strategy)
 
-        stats = QStats(
-            config.num_comm_rounds,
-            config.num_total_clients,
-            max(round(Int, config.fraction_clients * config.num_total_clients), 1),
-            length(weights)
-        )
+        # stats = QStats(
+        #     config.num_comm_rounds,
+        #     config.num_total_clients,
+        #     max(round(Int, config.fraction_clients * config.num_total_clients), 1),
+        #     length(weights)
+        # )
 
         # stats = AllStats(
         #     config.num_comm_rounds,
@@ -62,12 +85,19 @@ struct CentralNode
         # )
 
         return new(
-            host, port, 
-            client_manager, 
-            payload_serde, 
+            # networking
+            host, port, client_manager, 
+           
+            # ml
+            weights, strategy,
+           
+            # fl
+            num_comm_rounds, fraction_clients, num_total_clients,
+           
+            # hook
             evaluate,
-            config,
-            stats
+            
+            config
         )
     end
 end
@@ -76,27 +106,27 @@ end
 function fit(central_node::CentralNode)
     global_weights = central_node.config.weights
 
-    for round_num in 1:central_node.config.num_comm_rounds
+    for round_num in 1:central_node.num_comm_rounds
         @info "Communication round $round_num"
 
         # chose the clients subset for the round
-        clients = sample_clients(central_node.client_manager, central_node.config.fraction_clients)
+        clients = sample_clients(central_node.client_manager, central_node.fraction_clients)
 
         # serialize the global model
         req_weights = global_weights
-        payload = serialize_payload(central_node.payload_serde, global_weights)
+        payload = serialize_payload(central_node.config.payload_serde, global_weights)
 
         # ask clients to train on the global model
-        clients_payload = fit_clients(clients, payload)
+        clients_payload = fit_clients(central_node.config.fit_node, clients, payload)
 
         # deserialize the results
         round_weights = [
-            deserialize_payload(central_node.payload_serde, payload) # clients[i])
+            deserialize_payload(central_node.config.payload_serde, payload, clients[i])
             for (i, payload) in enumerate(clients_payload)
         ]
 
         # update the global model
-        global_weights = central_node.config.strategy(round_weights)
+        global_weights = central_node.strategy(round_weights)
 
         # evaluate global model
         loss, acc = central_node.evaluate(global_weights)
@@ -117,9 +147,9 @@ function fit(central_node::CentralNode)
         #     num_unknown_bases 
         # )
 
-        update_qstats!(central_node.stats, round_num, acc, loss, req_weights, round_weights)
+        # update_qstats!(central_node.stats, round_num, acc, loss, req_weights, round_weights)
 
-        save("stats.jld", "stats", central_node.stats)
+        # save("stats.jld", "stats", central_node.stats)
     end
 end
 
@@ -131,9 +161,9 @@ Ask each client from `clients` to train on their local data, by using the model
 weights contained in the `payload`. Returns a `Vector` where each element is the
 serialized weights of one client.
 """
-function fit_clients(clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{UInt8}}
+function fit_clients(fit_node::String, clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{UInt8}}
     # asynchronously ask the clients subset to train
-    tasks = [@async fit_client(client, payload) for client in clients]
+    tasks = [@async fit_client(fit_node, client, payload) for client in clients]
     wait.(tasks)
 
     round_weights = map(task -> task.result, tasks) # decompression could occurs here?
@@ -148,8 +178,8 @@ end
 Asks one `client` to train on its local data, by using the model weights
 contained in the `payload`. Returns the serialized updated `weights`.
 """
-function fit_client(client::String, payload::Vector{UInt8})::Vector{UInt8}
-    endpoint = client * FIT_NODE
+function fit_client(fit_node::String, client::String, payload::Vector{UInt8})::Vector{UInt8}
+    endpoint = client *  fit_node
     response = HTTP.request("POST", endpoint, [], payload)
     return response.body
 end

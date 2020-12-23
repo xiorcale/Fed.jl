@@ -1,70 +1,83 @@
-using  CRC32c
+# using ConfParser
+using CRC32c
 using SHA
-# using JLD
-
-#------------------
-# Server endpoints
-#------------------
-
-const SERVERURL = "http://127.0.0.1:8080"
-
-const REGISTER_NODE = "/register"
 
 
-#------------------
-# Client endpoints
-#------------------
+struct Config{T <: Real}
+    # endpoints
+    serverurl::String
+    register_node::String
+    fit_node::String
+    gd_bases::String
 
-const FIT_NODE = "/fit"
+    # quantization
+    qdtype::Type{T}
+    qmin::T
+    qmax::T
 
+    # gd
+    chunksize::Int
+    fingerprint::Function
+    permutations_file::String
 
-#------------------
-# GD endpoints
-#------------------
+    # transform
+    msbsize::T
 
-const GD_BASES = "/bases"
-
-
-#----------------
-# Serde config
-#----------------
-
-# quantization
-const QDTYPE = UInt8
-const MINVAL = 0x00
-const MAXVAL = 0xFF
-
-# const QDTYPE = UInt16
-# const MINVAL = 0x0000
-# const MAXVAL = 0xFFFF
-
-# const QDTYPE = Float32
-# const MINVAL = -1.0
-# const MAXVAL = 1.0
-
-# permutation
-const PERMUTATIONS_FILE = "./permutations.jld"
-
-# generalized deduplication
-const FINGERPRINT = sha1
-# const FINGERPRINT = crc32c
-
-const CHUNKSIZE = 256
-const MSBSIZE = 0x05
+    # serialization
+    payload_serde::PayloadSerde
+end
 
 
-# function save_config()
-#     save(
-#         "config.jld",
-#         "serverurl", SERVERURL,
-#         "register_node", REGISTER_NODE,
-#         "fit_node", FIT_NODE,
-#         "gd_bases", GD_BASES,
-#         "qdtype", QDTYPE,
-#         "minval", MINVAL,
-#         "maxval", MAXVAL,
-#         "permutations_file", PERMUTATIONS_FILE,
-#         "chunksize", CHUNKSIZE,
-#         "msbsize", MSBSIZE
-#     )
-# end
+# # load and parse configuration
+# conf = ConfParse("./config.ini")
+# parse_conf!(conf)
+
+
+# #--------------
+# # Endpoints
+# #--------------
+
+# const SERVERURL = retrieve(conf, "endpoint", "serverurl")
+# const REGISTER_NODE = retrieve(conf, "endpoint", "register_node")
+# const FIT_NODE = retrieve(conf, "endpoint", "fit_node")
+# const GD_BASES = retrieve(conf, "endpoint", "gd_bases")
+
+
+# #--------------
+# # Serialization
+# #--------------
+
+# const PAYLOAD_SERDE = retrieve(conf, "serialization", "payload_serde")
+
+
+# #--------------
+# # Quantization
+# #--------------
+
+# datatype = Dict(
+#     "UInt8" => UInt8,
+#     "UInt16" => UInt16,
+#     "Float32" => Float32
+# )
+
+# const QDTYPE = datatype[retrieve(conf, "quantization", "qdtype")]
+# const QMIN = parse(QDTYPE, retrieve(conf, "quantization", "qmin"))
+# const QMAX = parse(QDTYPE, retrieve(conf, "quantization", "qmax"))
+
+
+# #--------------
+# # GD
+# #--------------
+
+# hashfunc = Dict(
+#     "sha1" => sha1,
+#     "crc32" => crc32c
+# )
+
+# const CHUNKSIZE = parse(Int, retrieve(conf, "gd", "chunksize"))
+# const FINGERPRINT = hashfunc[retrieve(conf, "gd", "fingerprint")]
+# const PERMUTATIONS_FILE = retrieve(conf, "gd", "permutations_file")
+
+
+# # Transform
+# const MSBSIZE = parse(QDTYPE, retrieve(conf, "transform", "msbsize"))

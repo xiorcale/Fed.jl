@@ -1,9 +1,8 @@
-using ..Fed: CHUNKSIZE, MSBSIZE, QDTYPE, FINGERPRINT, PERMUTATIONS_FILE
 using SHA
 
 
-struct QPayload
-    data::Vector{QDTYPE}
+struct QPayload{T <: Real}
+    data::Vector{T}
     minval::Float32
     maxval::Float32
 end
@@ -25,27 +24,23 @@ Serializes `weights` with the `QuantizedPayloadSerde` where quantization is
 applied before serialization.
 """
 function serialize_payload(p::QuantizedPayloadSerde, weights::Vector{Float32})::Vector{UInt8}
-    # find quantization range
-    minval = minimum(weights)
-    maxval = maximum(weights)
-
     # quantize weights
-    q = Quantizer{p.qtype}(p.qmin, p.qmax, minval, maxval)
+    q = Quantizer{p.qtype}(weights)
     qweights = [quantize(q, w) for w in weights]
-
+    
     payload = QPayload(qweights, minval, maxval)
-
+    
     return pack(payload)
 end
 
 
 """
-    deserialize_payload(::QuantizedPayloadSerde, from, data)
+    deserialize_payload(::QuantizedPayloadSerde, data, [from])
 
 Deserializes `data` with the `QuantizedPayloadSerde` where dequantization is
 applied after deserialization.
 """
-function deserialize_payload(p::QuantizedPayloadSerde, data::Vector{UInt8})::Vector{Float32}
+function deserialize_payload(p::QuantizedPayloadSerde, data::Vector{UInt8}; from::String)::Vector{Float32}
     payload = unpack(data)
 
     # dequantize weights

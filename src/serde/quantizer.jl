@@ -24,6 +24,12 @@ struct Quantizer{T <: Real}
         zero_point = -minval / scale
         return new(UInt16, 0, 65535, minval, maxval, scale, zero_point)
     end
+
+    Quantizer{T}(data::Vector{T}) where T <: Real = begin
+        minval = minimum(data)
+        maxval = maximum(data)
+        return new(T, minval, maxval)
+    end
 end
 
 

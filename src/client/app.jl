@@ -1,6 +1,6 @@
 using GD
 using HTTP
-using ..Fed: curry, FIT_NODE, GD_BASES
+using ..Fed: curry
 
 
 """
@@ -11,7 +11,7 @@ Builds the routes to the node endpoints.
 function build_router(node::Node)
     router = HTTP.Router()
 
-    HTTP.@register(router, "POST", FIT_NODE, curry(fit_service, node))
+    HTTP.@register(router, "POST", node.config.fit_node, curry(fit_service, node))
     # HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, node.payload_serde.store))
 
     return router

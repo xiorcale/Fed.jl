@@ -1,18 +1,20 @@
 using HTTP
 using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
-using ..Fed: QDTYPE, MINVAL, MAXVAL, REGISTER_NODE, SERVERURL
+# using ..Fed: QDTYPE, QMIN, QMAX, REGISTER_NODE, SERVERURL
+using ..Fed: Config
 
-
-struct Node
+struct Node{T <: Real}
+    # networking
     host::String
     port::Int
-    payload_serde::QuantizedPayloadSerde{QDTYPE}
 
+    # hook
     fit::Function
 
-    Node(host, port, fit) = begin
-        payload_serde = QuantizedPayloadSerde{QDTYPE}(MINVAL, MAXVAL)
-        new(host, port, payload_serde, fit)
+    config::Config{T}
+
+    Node{T}(host, port, fit, config) where T <: Real = begin
+        new(host, port, fit, config)
     end
 end
 
@@ -24,7 +26,7 @@ Register the `node` to the server, letting it knows that it is available to take
 part in the training.
 """
 function register_to_server(node::Node)::HTTP.Response
-    endpoint = SERVERURL * REGISTER_NODE
+    endpoint = node.config.serverurl * node.config.register_node
     payload = "http://$(node.host):$(node.port)"
     response = HTTP.request("POST", endpoint, [], payload)
     return response
