@@ -28,19 +28,19 @@ function serialize_payload(p::QuantizedPayloadSerde, weights::Vector{Float32})::
     q = Quantizer{p.qtype}(weights)
     qweights = [quantize(q, w) for w in weights]
     
-    payload = QPayload(qweights, minval, maxval)
+    payload = QPayload(qweights, q.minval, q.maxval)
     
     return pack(payload)
 end
 
 
 """
-    deserialize_payload(::QuantizedPayloadSerde, data, [from])
+    deserialize_payload(::QuantizedPayloadSerde, data, from)
 
 Deserializes `data` with the `QuantizedPayloadSerde` where dequantization is
 applied after deserialization.
 """
-function deserialize_payload(p::QuantizedPayloadSerde, data::Vector{UInt8}; from::String)::Vector{Float32}
+function deserialize_payload(p::QuantizedPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
     # dequantize weights

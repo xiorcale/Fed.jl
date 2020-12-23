@@ -8,7 +8,7 @@ include("client_manager.jl")
 export ClientManager, length, num_available_clients, register, sample_clients
 
 include("central_node.jl")
-export CentralNode, Config
+export CentralNode
 
 include("service.jl")
 export register_client

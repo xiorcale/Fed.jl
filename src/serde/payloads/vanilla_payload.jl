@@ -13,11 +13,11 @@ end
 
 
 """
-    deserialize_payload(::VanillaPayloadSerde, data, [from])
+    deserialize_payload(::VanillaPayloadSerde, data, from)
 
 Deserializes `data` with the `VanillaPayloadSerde` where only basic 
 deserialization is applied.
 """
-function deserialize_payload(::VanillaPayloadSerde, data::Vector{UInt8}, ::String)::Vector{Float32}
+function deserialize_payload(::VanillaPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     return unpack(data)
 end

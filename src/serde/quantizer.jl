@@ -25,10 +25,10 @@ struct Quantizer{T <: Real}
         return new(UInt16, 0, 65535, minval, maxval, scale, zero_point)
     end
 
-    Quantizer{T}(data::Vector{T}) where T <: Real = begin
+    Quantizer{T}(data::Vector{Float32}) where T <: Real = begin
         minval = minimum(data)
         maxval = maximum(data)
-        return new(T, minval, maxval)
+        return Quantizer{T}(minval, maxval)
     end
 end
 

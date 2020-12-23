@@ -1,31 +1,8 @@
 using JLD
 using HTTP
-using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
-# using ..Fed: QDTYPE, QMIN, QMAX, FIT_NODE
+using ..Fed: serialize_payload, deserialize_payload
 # using ..Fed: AllStats, update_stats!, QStats, update_qstats!
 using ..Fed: Config
-
-# struct Config
-#     # machine learning
-#     weights::Vector{Float32}
-#     strategy::Function
-
-#     # networking
-#     num_comm_rounds::Int
-#     fraction_clients::Float32
-#     num_total_clients::Int
-
-#     Config(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients) =
-#         new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
-
-#     Config(weights, strategy) = begin
-#         num_comm_rounds = 100
-#         fraction_clients = 0.1
-#         num_total_clients = 100
-#         new(weights, strategy, num_comm_rounds, fraction_clients, num_total_clients)
-#     end
-    
-# end
 
 
 struct CentralNode{T <: Real}
@@ -33,7 +10,6 @@ struct CentralNode{T <: Real}
     host::String
     port::Int
     client_manager::ClientManager
-    # payload_serde::QuantizedPayloadSerde{QDTYPE}
 
     # machine learning
     weights::Vector{Float32}
@@ -64,10 +40,8 @@ struct CentralNode{T <: Real}
         client_manager = ClientManager()
        
         num_comm_rounds = 100
-        fraction_clients = 0.1
+        fraction_clients = 0.1f0
         num_total_clients = 100
-
-        config = Config(weights, strategy)
 
         # stats = QStats(
         #     config.num_comm_rounds,
@@ -104,7 +78,7 @@ end
 
 
 function fit(central_node::CentralNode)
-    global_weights = central_node.config.weights
+    global_weights = central_node.weights
 
     for round_num in 1:central_node.num_comm_rounds
         @info "Communication round $round_num"
