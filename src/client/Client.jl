@@ -2,7 +2,7 @@ module Client
 
 
 include("node.jl")
-export Node, Config, register_to_server
+export Node, register_to_server
 
 include("service.jl")
 export fit_service

@@ -10,7 +10,7 @@ struct GDPayload
 end
 
 
-struct GDPayloadSerde{T <: Real}
+struct GDPayloadSerde{T <: Real} <: PayloadSerde
     # quantization
     qtype::Type{T}
     qmin::T
@@ -20,8 +20,8 @@ struct GDPayloadSerde{T <: Real}
 
     store::Store
 
-    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, permutations_file::String) where T <: Real = begin
-        quantizer = GD.Transform.Quantizer{QDTYPE}(chunksize, msbsize)
+    GDPayloadSerde{T}(qmin::T, qmax::T, chunksize::Int, fingerprint::Function, msbsize::T, permutations_file::String) where T <: Real = begin
+        quantizer = GD.Transform.Quantizer{T}(chunksize, msbsize)
 
         permutations = JLD.load(permutations_file, "permutations")
 
@@ -50,7 +50,7 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     # gd compression
     gdfile = compress!(p.store, qweights)
 
-    payload = Payload(gdfile, minval, maxval)
+    payload = GDPayload(gdfile, q.minval, q.maxval)
 
     return pack(payload)
 end

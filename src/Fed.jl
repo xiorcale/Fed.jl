@@ -17,24 +17,6 @@ include("common/config.jl")
 export Config
 
 
-# """
-#     build_payload_serializer()
-
-# Returns the payload serializer matching the current configuration.
-# """
-# function build_payload_serializer()::PayloadSerde
-#     if PAYLOAD_SERDE == "quantization"
-#         return QuantizedPayloadSerde{QDTYPE}(QMIN, QMAX)
-#     elseif PAYLOAD_SERDE == "gd"
-#         return GDPayloadSerde{QDTYPE}(QMIN, QMAX)
-#     end
-       
-#     return VanillaPayloadSerde()
-# end
-
-# export build_payload_serializer
-
-
 # include("stats/Stats.jl")
 # using .Stats: AllStats, update_stats!, QStats, update_qstats!
 # export AllStats, update_stats!, QStats, update_qstats!

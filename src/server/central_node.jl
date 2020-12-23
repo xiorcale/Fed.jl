@@ -1,6 +1,6 @@
 using JLD
 using HTTP
-using ..Fed: serialize_payload, deserialize_payload
+using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
 # using ..Fed: AllStats, update_stats!, QStats, update_qstats!
 using ..Fed: Config
 
@@ -13,7 +13,7 @@ struct CentralNode{T <: Real}
 
     # machine learning
     weights::Vector{Float32}
-    startegy::Function
+    strategy::Function
 
     # federated learning
     num_comm_rounds::Int

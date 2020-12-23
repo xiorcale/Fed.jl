@@ -1,6 +1,5 @@
 using HTTP
 using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
-# using ..Fed: QDTYPE, QMIN, QMAX, REGISTER_NODE, SERVERURL
 using ..Fed: Config
 
 struct Node{T <: Real}

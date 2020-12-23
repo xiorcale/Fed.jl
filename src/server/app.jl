@@ -13,7 +13,10 @@ function build_router(central_node::CentralNode)::HTTP.Router
     router = HTTP.Router()
 
     HTTP.@register(router, "POST", central_node.config.register_node, curry(register_client!, central_node.client_manager))
-    # HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, central_node.payload_serde.store))
+
+    if typeof(central_node.config.payload_serde) == GDPayloadSerde{central_node.config.qdtype}
+        HTTP.@register(router, "GET", central_node.config.gd_bases, curry(GD.return_bases, central_node.config.payload_serde.store))
+    end
 
     return router
 end

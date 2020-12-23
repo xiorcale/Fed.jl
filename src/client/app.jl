@@ -12,7 +12,11 @@ function build_router(node::Node)
     router = HTTP.Router()
 
     HTTP.@register(router, "POST", node.config.fit_node, curry(fit_service, node))
-    # HTTP.@register(router, "GET", GD_BASES, curry(GD.return_bases, node.payload_serde.store))
+
+    # setup GD store endpoint if we're unsing GDPayloadSerde
+    if typeof(node.config.payload_serde) == GDPayloadSerde{node.config.qdtype}
+        HTTP.@register(router, "GET", node.config.gd_bases, curry(GD.return_bases, node.config.payload_serde.store))
+    end
 
     return router
 end
