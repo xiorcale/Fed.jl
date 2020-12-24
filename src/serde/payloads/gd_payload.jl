@@ -50,6 +50,8 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     # gd compression
     gdfile = compress!(p.store, qweights)
 
+    STATS.req_data = gdfile.hashes
+
     payload = GDPayload(gdfile, q.minval, q.maxval)
 
     return pack(payload)
@@ -64,6 +66,8 @@ and dequantization are applied before deserialization.
 """
 function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
+
+    push!(STATS.res_data, payload.gdfile.hashes)
 
     # gd decompression
     validate_remote!(p.store, payload.gdfile, from)

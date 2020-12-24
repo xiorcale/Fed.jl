@@ -1,6 +1,6 @@
 using GD
 using HTTP
-using ..Fed: curry
+using ..Fed: curry, initialize_stats
 
 
 """
@@ -24,6 +24,13 @@ end
 
 function start_client(node::Node)
     router = build_router(node)
+
+    # hackish way to prevent PayloadSerde to fail while recording stats
+    initialize_stats(
+        node.config.stats_type,
+        node.config.qdtype,
+        0, 0.0f0, 0, 0
+    )
 
     response = register_to_server(node)
     @assert response.status == 200

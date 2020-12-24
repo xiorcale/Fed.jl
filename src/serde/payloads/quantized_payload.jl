@@ -1,4 +1,5 @@
 using SHA
+using ..Fed: STATS
 
 
 struct QPayload{T <: Real}
@@ -27,6 +28,8 @@ function serialize_payload(p::QuantizedPayloadSerde, weights::Vector{Float32})::
     # quantize weights
     q = Quantizer{p.qtype}(weights)
     qweights = [quantize(q, w) for w in weights]
+
+    STATS.req_data = qweights
     
     payload = QPayload(qweights, q.minval, q.maxval)
     
@@ -42,6 +45,8 @@ applied after deserialization.
 """
 function deserialize_payload(p::QuantizedPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
+
+    push!(STATS.res_data, payload.data)
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)

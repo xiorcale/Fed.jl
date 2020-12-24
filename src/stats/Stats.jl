@@ -1,59 +1,38 @@
 module Stats
 
-using JLD
+abstract type Statistics end
+function update_stats!(::Statistics, args...) end
+export Statistics, update_stats!
 
 
-include("metrics/metrics.jl")
+include("metrics.jl")
+export compute_changes_per_weights, compute_round_changes
 
-include("general.jl")
-include("ml.jl")
-include("gd.jl")
-include("net.jl")
+include("base_stats.jl")
+export BaseStats
 
-include("quantization_stats.jl")
-export QStats, update_qstats!
-
-struct AllStats
-    general_stats::GeneralStats
-    mlstats::MLStats
-    gdstore_stats::GDStoreStats
-    netstats::NetStats
-
-    AllStats(
-        num_comm_round::Int,
-        num_clients::Int,
-        num_clients_per_round::Int,
-        num_weights::Int,
-        compressor::Compressor
-    ) = new(
-        GeneralStats(num_comm_round, num_clients, num_clients_per_round),
-        MLStats(num_weights),
-        GDStoreStats(compressor, num_weights),
-        NetStats()
-    )
-end
+include("vanilla_stats.jl")
+export VanillaStats
 
 
-"""
-    update_stats!(stats, round_num, acc, loss, database_length, num_requested_bases, num_unknown_bases)
-
-Updates all the statistics at once.
-"""
-function update_stats!(
-    stats::AllStats,
-    round_num::Int,
-    acc::Float32,
-    loss::Float32,
-    database_length::Int,
-    num_requested_bases::Int,
-    num_unknown_bases::Int
+STATS_TYPE = Dict(
+    "vanilla" => VanillaStats
 )
-    update_mlstats!(stats.mlstats, acc, loss)
-    update_gdstore_stats!(stats.gdstore_stats, database_length, num_requested_bases, num_unknown_bases)
-    update_netstats!(stats.netstats, stats.general_stats, stats.gdstore_stats, round_num)
+
+STATS = Statistics
+
+
+function initialize_stats(
+    stats_type::String, 
+    dtype::Type{T},
+    num_comm_round::Int,
+    fraction_client::Float32,
+    num_total_clients::Int,
+    num_weights::Int
+) where T <: Real
+    global STATS = STATS_TYPE[stats_type]{dtype}(num_comm_round, fraction_client, num_total_clients, num_weights)
 end
 
-
-export AllStats, update_stats!
+export STATS, initialize_stats
 
 end # module

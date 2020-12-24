@@ -1,11 +1,13 @@
 module Fed
 
 
-# include("common/config.jl")
-# export QDTYPE, QMIN, QMAX, REGISTER_NODE, FIT_NODE, CHUNKSIZE, MSBSIZE, SERVERURL, GD_BASES, FINGERPRINT, PERMUTATIONS_FILE, PAYLOAD_SERDE
-
 include("common/tools.jl")
 export curry
+
+
+include("stats/Stats.jl")
+using .Stats: Statistics, BaseStats, VanillaStats, update_stats!, initialize_stats, STATS, compute_changes_per_weights, compute_round_changes
+export Statistics, BaseStats, VanillaStats, update_stats!, initialize_stats, STATS, compute_changes_per_weights, compute_round_changes
 
 
 include("serde/Serde.jl")
@@ -15,11 +17,6 @@ export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde,
 
 include("common/config.jl")
 export Config
-
-
-# include("stats/Stats.jl")
-# using .Stats: AllStats, update_stats!, QStats, update_qstats!
-# export AllStats, update_stats!, QStats, update_qstats!
 
 
 include("server/Server.jl")

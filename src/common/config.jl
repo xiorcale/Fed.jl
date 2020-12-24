@@ -25,59 +25,141 @@ struct Config{T <: Real}
 
     # serialization
     payload_serde::PayloadSerde
+
+    # stats
+    stats_type::String
+
+    Config{T}(
+        serverurl,
+        qdtype,
+        qmin,
+        qmax,
+        chunksize,
+        fingerprint,
+        permutations_file,
+        msbsize,
+        payload_serde,
+        stats_type
+    ) where T <: Real = new(
+        serverurl,
+        "/register",
+        "/fit",
+        "/bases",
+        qdtype,
+        qmin,
+        qmax,
+        chunksize,
+        fingerprint,
+        permutations_file,
+        msbsize,
+        payload_serde,
+        stats_type
+    )
 end
 
 
-# # load and parse configuration
-# conf = ConfParse("./config.ini")
-# parse_conf!(conf)
+"""
+    new_vanilla_config()
+
+Returns a new vanilla configuration, without any quantization or generalized
+deduplication. Good ol' serialization.
+"""
+function new_vanilla_config(serverurl::String)::Config{Float32}
+    # quantization - default values (quantization is unused for this config)
+    qdtype = Float32
+    qmin = -1.0
+    qmax = 1.0
+
+    # gd - default values (gd is unused for this config)
+    chunksize = 0
+    fingerprint = () -> undef
+
+    permutations_file = ""
+    msbsize = 0.0f0
+
+    # serialization
+    payload_serde = VanillaPayloadSerde()
+
+    stats_type = "vanilla"
+
+    return Config{Float32}(
+        serverurl,
+        qdtype,
+        qmin,
+        qmax,
+        chunksize,
+        fingerprint,
+        permutations_file,
+        msbsize,
+        payload_serde,
+        stats_type
+    )
+end
 
 
-# #--------------
-# # Endpoints
-# #--------------
+"""
+    new_quantized_config()
 
-# const SERVERURL = retrieve(conf, "endpoint", "serverurl")
-# const REGISTER_NODE = retrieve(conf, "endpoint", "register_node")
-# const FIT_NODE = retrieve(conf, "endpoint", "fit_node")
-# const GD_BASES = retrieve(conf, "endpoint", "gd_bases")
+Returns a new configuration, with quantized weights but without generalized
+deduplication.
+"""
+function new_quantized_config(serverurl::String, qdtype::Type{T}, qmin::T, qmax::T)::Config{T} where T <: Real
+    # gd - default values (gd is unused for this config)
+    chunksize = 0
+    fingerprint = () -> undef
 
+    permutations_file = ""
+    msbsize = 0.0f0
 
-# #--------------
-# # Serialization
-# #--------------
+    # serialization
+    payload_serde = QuantizedPayloadSerde{T}(qmin, qmax)
 
-# const PAYLOAD_SERDE = retrieve(conf, "serialization", "payload_serde")
+    stats_type = "vanilla"
 
-
-# #--------------
-# # Quantization
-# #--------------
-
-# datatype = Dict(
-#     "UInt8" => UInt8,
-#     "UInt16" => UInt16,
-#     "Float32" => Float32
-# )
-
-# const QDTYPE = datatype[retrieve(conf, "quantization", "qdtype")]
-# const QMIN = parse(QDTYPE, retrieve(conf, "quantization", "qmin"))
-# const QMAX = parse(QDTYPE, retrieve(conf, "quantization", "qmax"))
-
-
-# #--------------
-# # GD
-# #--------------
-
-# hashfunc = Dict(
-#     "sha1" => sha1,
-#     "crc32" => crc32c
-# )
-
-# const CHUNKSIZE = parse(Int, retrieve(conf, "gd", "chunksize"))
-# const FINGERPRINT = hashfunc[retrieve(conf, "gd", "fingerprint")]
-# const PERMUTATIONS_FILE = retrieve(conf, "gd", "permutations_file")
+    return Config{T}(
+        serverurl,
+        T,
+        qmin,
+        qmax,
+        chunksize,
+        fingerprint,
+        permutations_file,
+        msbsize,
+        payload_serde,
+        stats_type
+    )
+end
 
 
-# # Transform
-# const MSBSIZE = parse(QDTYPE, retrieve(conf, "transform", "msbsize"))
+"""
+    new_gd_config()
+
+Returns a new configuration, with quantized weights and generalized
+deduplication.
+"""
+function new_gd_config(serverurl::String, qdtype::Type{T}, qmin::T, qmax::T)::Config{T} where T <: Real
+    # gd
+    chunksize = 256
+    fingerprint = sha1
+
+    permutations_file = "./permutations.jld"
+    msbsize = round(qdtype, sizeof(qdtype) * 8 * 0.6) # 60% goes in the basis
+
+    # serialization
+    payload_serde = GDPayloadSerde{T}(qmin, qmax, chunksize, fingerprint, msbsize, permutations_file)
+
+    stats_type = "vanilla"
+
+    return Config{T}(
+        serverurl,
+        T,
+        qmin,
+        qmax,
+        chunksize,
+        fingerprint,
+        permutations_file,
+        msbsize,
+        payload_serde,
+        stats_type
+    )
+end

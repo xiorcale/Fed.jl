@@ -1,8 +1,7 @@
 using JLD
 using HTTP
 using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
-# using ..Fed: AllStats, update_stats!, QStats, update_qstats!
-using ..Fed: Config
+using ..Fed: Config, STATS, update_stats!, initialize_stats
 
 
 struct CentralNode{T <: Real}
@@ -25,9 +24,6 @@ struct CentralNode{T <: Real}
 
     config::Config{T}
 
-    # stats
-    # stats::QStats
-
     CentralNode{T}(
         host::String,
         port::Int,
@@ -42,21 +38,6 @@ struct CentralNode{T <: Real}
         num_comm_rounds = 100
         fraction_clients = 0.1f0
         num_total_clients = 100
-
-        # stats = QStats(
-        #     config.num_comm_rounds,
-        #     config.num_total_clients,
-        #     max(round(Int, config.fraction_clients * config.num_total_clients), 1),
-        #     length(weights)
-        # )
-
-        # stats = AllStats(
-        #     config.num_comm_rounds,
-        #     config.num_total_clients,
-        #     max(round(Int, config.fraction_clients * config.num_total_clients), 1),
-        #     length(weights),
-        #     # payload_serde.store.compressor
-        # )
 
         return new(
             # networking
@@ -80,6 +61,15 @@ end
 function fit(central_node::CentralNode)
     global_weights = central_node.weights
 
+    initialize_stats(
+        central_node.config.stats_type,
+        central_node.config.qdtype,
+        central_node.num_comm_rounds,
+        central_node.fraction_clients,
+        central_node.num_total_clients,
+        length(global_weights)
+    )
+
     for round_num in 1:central_node.num_comm_rounds
         @info "Communication round $round_num"
 
@@ -87,7 +77,6 @@ function fit(central_node::CentralNode)
         clients = sample_clients(central_node.client_manager, central_node.fraction_clients)
 
         # serialize the global model
-        req_weights = global_weights
         payload = serialize_payload(central_node.config.payload_serde, global_weights)
 
         # ask clients to train on the global model
@@ -107,23 +96,9 @@ function fit(central_node::CentralNode)
         @info "loss: $loss, acc: $acc"
 
         # record statistics
-        # database_length = length(central_node.payload_serde.store.database)
-        # num_requested_bases = central_node.payload_serde.store.num_requested_bases
-        # num_unknown_bases = central_node.payload_serde.store.num_unknown_bases
-        
-        # update_stats!(
-        #     central_node.stats,
-        #     round_num,
-        #     acc,
-        #     loss,
-        #     database_length,
-        #     num_requested_bases,
-        #     num_unknown_bases 
-        # )
+        update_stats!(STATS, round_num, loss, acc, sizeof(payload))
 
-        # update_qstats!(central_node.stats, round_num, acc, loss, req_weights, round_weights)
-
-        # save("stats.jld", "stats", central_node.stats)
+        save("stats.jld", "stats", STATS)
     end
 end
 
@@ -140,7 +115,7 @@ function fit_clients(fit_node::String, clients::Vector{String}, payload::Vector{
     tasks = [@async fit_client(fit_node, client, payload) for client in clients]
     wait.(tasks)
 
-    round_weights = map(task -> task.result, tasks) # decompression could occurs here?
+    round_weights = map(task -> task.result, tasks)
 
     return round_weights
 end
