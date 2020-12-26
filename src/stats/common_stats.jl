@@ -1,28 +1,42 @@
-mutable struct VanillaStats{T <: Real} <: Statistics
+"""
+    CommonStats
+
+Every stats common to any configuration.
+"""
+mutable struct CommonStats{T <: Real} <: Statistics
     dtype::Type{T}
-    base_stats::BaseStats
 
-    # network traffic
-    uplink::Vector{Int}
-    downlink::Vector{Int}
+    # federated learning stats
+    num_comm_rounds::Int
+    num_clients_per_round::Int
+    num_total_clients::Int
 
+    # machine learning stats
+    num_weights::Int
+    losses::Vector{Float32}
+    accuracies::Vector{Float32}
+ 
     # changes inside data
     req_data::Vector
     res_data::Vector{Vector}
     round_changes::Vector{Float32}
     changes_per_weights::Vector{Vector{Float32}}
 
-    VanillaStats{T}(
-        num_comm_round::Int,
-        fraction_client::Float32,
+    CommonStats{T}(
+        num_comm_rounds::Int,
+        fraction_clients::Float32,
         num_total_clients::Int,
         num_weights::Int
     ) where T <: Real = new(
         T,
-        BaseStats(num_comm_round, fraction_client, num_total_clients, num_weights),
-        # network traffic
-        Vector{Int}(undef, 0),
-        Vector{Int}(undef, 0),
+        # fedetated learning
+        num_comm_rounds,
+        max(round(Int, fraction_clients * num_total_clients), 1),
+        num_total_clients,
+        # machine learning
+        num_weights,
+        Vector{Float32}(undef, 0),
+        Vector{Float32}(undef, 0),
         # changes inside data
         Vector(undef, 0),
         Vector{Vector}(undef, 0),
@@ -32,19 +46,12 @@ mutable struct VanillaStats{T <: Real} <: Statistics
 end
 
 function update_stats!(
-    stats::VanillaStats,
-    round_num::Int,
+    stats::CommonStats,
     loss::Float32,
     accuracy::Float32,
-    payload_size::Int
-)
-    update_stats!(stats.base_stats, loss, accuracy)
-    
-    num_comm = round_num * stats.base_stats.num_clients_per_round
-    updown = num_comm * payload_size # symetrical communication
-
-    push!(stats.uplink, updown)
-    push!(stats.downlink, updown)
+) 
+    push!(stats.losses, loss)
+    push!(stats.accuracies, accuracy)
 
     push!(stats.round_changes, compute_round_changes(stats.req_data, stats.res_data))
     push!(stats.changes_per_weights, compute_changes_per_weights(stats.req_data, stats.res_data))

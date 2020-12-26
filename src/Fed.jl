@@ -1,13 +1,12 @@
 module Fed
 
 
+abstract type Statistics end
+STATS = Statistics
+export Statistics, STATS
+
 include("common/tools.jl")
 export curry
-
-
-include("stats/Stats.jl")
-using .Stats: Statistics, BaseStats, VanillaStats, update_stats!, initialize_stats, STATS, compute_changes_per_weights, compute_round_changes
-export Statistics, BaseStats, VanillaStats, update_stats!, initialize_stats, STATS, compute_changes_per_weights, compute_round_changes
 
 
 include("serde/Serde.jl")
@@ -15,8 +14,25 @@ using .Serde:  PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPaylo
 export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
 
 
-include("common/config.jl")
-export Config
+include("config/Config.jl")
+using .Config: Configuration, VanillaConfig, QuantizedConfig, GDConfig, CommonConfig
+
+
+include("stats/Stats.jl")
+using .Stats: CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats!, compute_changes_per_weights, compute_round_changes
+export CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats, compute_changes_per_weights, compute_round_changes
+
+
+function initialize_stats(config::Configuration, num_weights::Int)
+    global STATS = VanillaStats{config.common.dtype}(config, num_weights)
+end
+
+
+function initialize_stats(config::GDConfig, num_weights::Int)
+    global STATS = GDStats{config.common.dtype}(config, num_weights)
+end
+
+export initialize_stats
 
 
 include("server/Server.jl")

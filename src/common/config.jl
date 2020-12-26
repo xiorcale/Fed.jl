@@ -26,9 +26,6 @@ struct Config{T <: Real}
     # serialization
     payload_serde::PayloadSerde
 
-    # stats
-    stats_type::String
-
     Config{T}(
         serverurl,
         qdtype,
@@ -39,7 +36,6 @@ struct Config{T <: Real}
         permutations_file,
         msbsize,
         payload_serde,
-        stats_type
     ) where T <: Real = new(
         serverurl,
         "/register",
@@ -53,7 +49,6 @@ struct Config{T <: Real}
         permutations_file,
         msbsize,
         payload_serde,
-        stats_type
     )
 end
 
@@ -80,8 +75,6 @@ function new_vanilla_config(serverurl::String)::Config{Float32}
     # serialization
     payload_serde = VanillaPayloadSerde()
 
-    stats_type = "vanilla"
-
     return Config{Float32}(
         serverurl,
         qdtype,
@@ -92,7 +85,6 @@ function new_vanilla_config(serverurl::String)::Config{Float32}
         permutations_file,
         msbsize,
         payload_serde,
-        stats_type
     )
 end
 
@@ -148,8 +140,6 @@ function new_gd_config(serverurl::String, qdtype::Type{T}, qmin::T, qmax::T)::Co
     # serialization
     payload_serde = GDPayloadSerde{T}(qmin, qmax, chunksize, fingerprint, msbsize, permutations_file)
 
-    stats_type = "vanilla"
-
     return Config{T}(
         serverurl,
         T,
@@ -160,6 +150,5 @@ function new_gd_config(serverurl::String, qdtype::Type{T}, qmin::T, qmax::T)::Co
         permutations_file,
         msbsize,
         payload_serde,
-        stats_type
     )
 end

@@ -50,7 +50,7 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     # gd compression
     gdfile = compress!(p.store, qweights)
 
-    STATS.req_data = gdfile.hashes
+    STATS.common.req_data = gdfile.hashes
 
     payload = GDPayload(gdfile, q.minval, q.maxval)
 
@@ -67,10 +67,14 @@ and dequantization are applied before deserialization.
 function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
-    push!(STATS.res_data, payload.gdfile.hashes)
+    push!(STATS.common.res_data, payload.gdfile.hashes)
 
     # gd decompression
-    validate_remote!(p.store, payload.gdfile, from)
+    STATS.gd_net.num_unknown_bases += validate_remote!(p.store, payload.gdfile, from)
+    # since deserializing a client payload means the client is done with his work, we
+    # can also update the number of requested bases, to make sure the one requested by
+    # this client are taken into account.
+    STATS.gd_net.num_requested_bases = p.store.num_requested_bases
     qweights = extract(p.store, payload.gdfile)
 
     # shift back high entropy weights

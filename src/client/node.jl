@@ -1,6 +1,6 @@
 using HTTP
 using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload
-using ..Fed: Config
+using ..Fed: Configuration
 
 struct Node{T <: Real}
     # networking
@@ -10,7 +10,7 @@ struct Node{T <: Real}
     # hook
     fit::Function
 
-    config::Config{T}
+    config::Configuration
 
     Node{T}(host, port, fit, config) where T <: Real = begin
         new(host, port, fit, config)
@@ -25,7 +25,7 @@ Register the `node` to the server, letting it knows that it is available to take
 part in the training.
 """
 function register_to_server(node::Node)::HTTP.Response
-    endpoint = node.config.serverurl * node.config.register_node
+    endpoint = node.config.common.serverurl * node.config.common.register_node
     payload = "http://$(node.host):$(node.port)"
     response = HTTP.request("POST", endpoint, [], payload)
     return response

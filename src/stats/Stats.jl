@@ -1,38 +1,40 @@
 module Stats
 
-abstract type Statistics end
-function update_stats!(::Statistics, args...) end
-export Statistics, update_stats!
+using ..Fed: STATS, Statistics, Configuration, VanillaConfig, QuantizedConfig, GDConfig
 
+"""
+    update_stats!(stat, round_num, loss, accuracy)
+
+Update all the statistics at once. This function is intended to be used at the
+end of each communication round. It assumes that some values have been updated
+while calling the `PayloadSerde` functions.
+"""
+function update_stats!(
+    stats::Statistics, 
+    round_num::Int,
+    loss::Float32,
+    accuracy::Float32
+)
+    update_stats!(stats.common, loss, accuracy)
+    update_stats!(stats.network, round_num)
+end
+
+
+export update_stats!
 
 include("metrics.jl")
 export compute_changes_per_weights, compute_round_changes
 
-include("base_stats.jl")
-export BaseStats
+include("common_stats.jl")
+export CommonStats, update_stats!
 
-include("vanilla_stats.jl")
-export VanillaStats
+include("vanilla/vanilla_net.jl")
+include("vanilla/vanilla_stats.jl")
+export VanillaStats, VanillaNetStats, update_stats!
 
+include("gd/gd_net.jl")
+include("gd/gd_stats.jl")
+export GDStats, GDNetStats, update_stats!
 
-STATS_TYPE = Dict(
-    "vanilla" => VanillaStats
-)
-
-STATS = Statistics
-
-
-function initialize_stats(
-    stats_type::String, 
-    dtype::Type{T},
-    num_comm_round::Int,
-    fraction_client::Float32,
-    num_total_clients::Int,
-    num_weights::Int
-) where T <: Real
-    global STATS = STATS_TYPE[stats_type]{dtype}(num_comm_round, fraction_client, num_total_clients, num_weights)
-end
-
-export STATS, initialize_stats
 
 end # module
