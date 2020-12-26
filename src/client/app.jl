@@ -13,8 +13,10 @@ function build_router(node::Node)
     HTTP.@register(router, "POST", node.config.common.fit_node, curry(fit_service, node))
 
     # setup GD store endpoint if we're unsing GDPayloadSerde
-    if typeof(node.config) == GDConfig{node.config.common.dtype}
+    try
         HTTP.@register(router, "GET", node.config.common.gd_bases, curry(GD.return_bases, node.config.payload_serde.store))
+    catch
+        # nothing to do, it is not a GD config...
     end
 
     return router

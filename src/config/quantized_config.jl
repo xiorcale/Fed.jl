@@ -1,4 +1,4 @@
-struct QuantizedConfig{T <: Real} <: Configuration
+struct QuantizedConfig{T <: Unsigned} <: Configuration
     common::CommonConfig{T}
     payload_serde::QuantizedPayloadSerde
 
@@ -7,10 +7,8 @@ struct QuantizedConfig{T <: Real} <: Configuration
         num_comm_rounds::Int,
         fraction_clients::Float32,
         num_total_clients::Int,
-        qmin::T,
-        qmax::T
     ) where T <: Real = new(
         CommonConfig{T}(serverurl, num_comm_rounds, fraction_clients, num_total_clients),
-        QuantizedPayloadSerde{T}(qmin, qmax)
+        QuantizedPayloadSerde{T}()
     )
 end

@@ -44,8 +44,8 @@ function update_stats!(stats::GDNetStats, round_num::Int)
     num_comm = round_num * STATS.common.num_clients_per_round
 
     gdfile_size = (stats.hash_size + stats.deviation_size) * stats.gdfile_length
-    uplink = (num_comm * gdfile_size) + (stats.num_unknown_bases * stats.basis_size) + (stats.num_requested_bases * stats.hash_size)
-    downlink = (num_comm * gdfile_size) + (stats.num_unknown_bases * stats.hash_size) + (stats.num_requested_bases * stats.basis_size)
+    uplink = (num_comm * gdfile_size) + (stats.num_requested_bases * stats.basis_size) + (stats.num_unknown_bases * stats.hash_size)
+    downlink = (num_comm * gdfile_size) + (stats.num_requested_bases * stats.hash_size) + (stats.num_unknown_bases * stats.basis_size)
     
     push!(stats.uplink, uplink)
     push!(stats.downlink, downlink)

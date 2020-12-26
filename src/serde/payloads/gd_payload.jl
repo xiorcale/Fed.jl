@@ -10,7 +10,7 @@ struct GDPayload
 end
 
 
-struct GDPayloadSerde{T <: Real} <: PayloadSerde
+struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
     # quantization
     qtype::Type{T}
     qmin::T
@@ -20,7 +20,7 @@ struct GDPayloadSerde{T <: Real} <: PayloadSerde
 
     store::Store
 
-    GDPayloadSerde{T}(qmin::T, qmax::T, chunksize::Int, fingerprint::Function, msbsize::T, permutations_file::String) where T <: Real = begin
+    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, permutations_file::String) where T <: Real = begin
         quantizer = GD.Transform.Quantizer{T}(chunksize, msbsize)
 
         permutations = JLD.load(permutations_file, "permutations")
@@ -28,7 +28,7 @@ struct GDPayloadSerde{T <: Real} <: PayloadSerde
         compressor = Compressor(chunksize, quantizer, fingerprint)
         store = Store(compressor, Dict(), 0, 0)
 
-        return new(T, qmin, qmax, permutations, store)
+        return new(T, typemin(T), typemax(T), permutations, store)
     end
 end
 
@@ -45,7 +45,7 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     qweights = [quantize(q, w) for w in weights]
 
     # shift high entropy weights
-    permute!(qweights, p.permutations)
+    # permute!(qweights, p.permutations)
 
     # gd compression
     gdfile = compress!(p.store, qweights)
@@ -70,15 +70,15 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
     push!(STATS.common.res_data, payload.gdfile.hashes)
 
     # gd decompression
-    STATS.gd_net.num_unknown_bases += validate_remote!(p.store, payload.gdfile, from)
+    STATS.network.num_unknown_bases += validate_remote!(p.store, payload.gdfile, from)
     # since deserializing a client payload means the client is done with his work, we
     # can also update the number of requested bases, to make sure the one requested by
     # this client are taken into account.
-    STATS.gd_net.num_requested_bases = p.store.num_requested_bases
+    STATS.network.num_requested_bases = p.store.num_requested_bases
     qweights = extract(p.store, payload.gdfile)
 
     # shift back high entropy weights
-    invpermute!(qweights, p.permutations)
+    # invpermute!(qweights, p.permutations)
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)

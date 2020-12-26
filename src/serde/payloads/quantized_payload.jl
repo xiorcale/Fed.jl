@@ -2,19 +2,19 @@ using SHA
 using ..Fed: STATS
 
 
-struct QPayload{T <: Real}
+struct QPayload{T <: Unsigned}
     data::Vector{T}
     minval::Float32
     maxval::Float32
 end
 
 
-struct QuantizedPayloadSerde{T <: Real} <: PayloadSerde
+struct QuantizedPayloadSerde{T <: Unsigned} <: PayloadSerde
     qtype::Type{T}
     qmin::T
     qmax::T
 
-    QuantizedPayloadSerde{T}(qmin::T, qmax::T) where T <: Real = new(T, qmin, qmax)
+    QuantizedPayloadSerde{T}() where T <: Real = new(T, typemin(T), typemax(T))
 end
 
 
