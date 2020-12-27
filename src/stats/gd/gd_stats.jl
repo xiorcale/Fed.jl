@@ -2,6 +2,9 @@ mutable struct GDStats{T <: Real} <: Statistics
     common::CommonStats{T}
     network::GDNetStats
 
+    hash_round_changes::Vector{Float32}
+    deviation_round_changes::Vector{Float32}
+
     GDStats{T}(config::GDConfig, num_weights::Int) where T <: Real = begin
         
         gdfile_length = ceil(Int, num_weights / config.chunksize)
@@ -17,18 +20,19 @@ mutable struct GDStats{T <: Real} <: Statistics
                 config.common.num_total_clients, 
                 num_weights
             ),
-            GDNetStats(gdfile_length, basis_size, hash_size, deviation_size)
+            GDNetStats(gdfile_length, basis_size, hash_size, deviation_size),
+            Vector{Float32}(undef, 0),
+            Vector{Float32}(undef, 0)
         )
     end
 end
 
-# function update_stats!(
-#     stats::GDStats,
-#     round_num::Int,
-#     loss::Float32,
-#     accuracy::Float32
-# )
-#     update_stats!(stats.common, loss, accuracy)
-#     update_stats!(stats.network, round_num)
+function update_stats!(stats::GDStats) 
+    req_hashes = stats.common.req_data.hashes
+    res_hashes = map(gdfile -> gdfile.hashes, stats.common.res_data)
+    push!(stats.hash_round_changes, compute_round_changes(req_hashes, res_hashes))
 
-# end
+    req_dev = stats.common.req_data.deviations
+    res_dev = map(gdfile -> gdfile.deviations, stats.common.res_data)
+    push!(stats.deviation_round_changes, compute_round_changes(req_dev, res_dev))
+end

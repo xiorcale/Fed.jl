@@ -19,8 +19,8 @@ using .Config: Configuration, VanillaConfig, QuantizedConfig, GDConfig, CommonCo
 
 
 include("stats/Stats.jl")
-using .Stats: CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats!, compute_changes_per_weights, compute_round_changes
-export CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats, compute_changes_per_weights, compute_round_changes
+using .Stats: CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats!, compute_elements_difference, compute_changes_per_element, compute_round_changes
+export CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats, compute_elements_difference, compute_changes_per_element, compute_round_changes
 
 
 function initialize_stats(config::Configuration, num_weights::Int)

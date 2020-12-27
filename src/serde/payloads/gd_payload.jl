@@ -44,12 +44,12 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     qweights = [quantize(q, w) for w in weights]
 
     # shift high entropy weights
-    # permute!(qweights, p.permutations)
+    permute!(qweights, p.permutations)
 
     # gd compression
     gdfile = compress!(p.store, qweights)
 
-    STATS.common.req_data = gdfile.hashes
+    STATS.common.req_data = gdfile
 
     payload = GDPayload(gdfile, q.minval, q.maxval)
 
@@ -66,7 +66,7 @@ and dequantization are applied before deserialization.
 function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
-    push!(STATS.common.res_data, payload.gdfile.hashes)
+    push!(STATS.common.res_data, payload.gdfile)
 
     # gd decompression
     STATS.network.num_unknown_bases += validate_remote!(p.store, payload.gdfile, from)
@@ -77,7 +77,7 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
     qweights = extract(p.store, payload.gdfile)
 
     # shift back high entropy weights
-    # invpermute!(qweights, p.permutations)
+    invpermute!(qweights, p.permutations)
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)

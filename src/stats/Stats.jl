@@ -15,6 +15,7 @@ function update_stats!(
     loss::Float32,
     accuracy::Float32
 )
+    update_stats!(stats)
     update_stats!(stats.common, loss, accuracy)
     update_stats!(stats.network, round_num)
 end
