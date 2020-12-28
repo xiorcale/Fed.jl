@@ -9,25 +9,24 @@ struct GDPayload
 end
 
 
-struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
+mutable struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
     # quantization
     qtype::Type{T}
     qmin::T
     qmax::T
 
-    permutations::Vector{Int64}
-
     store::Store
 
-    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, permutations_file::String) where T <: Real = begin
-        quantizer = GD.Transform.Quantizer{T}(chunksize, msbsize)
+    is_patcher::Bool
+    gdfile::GDFile
 
-        permutations = JLD.load(permutations_file, "permutations")
+    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, is_patcher::Bool) where T <: Real = begin
+        quantizer = GD.Transform.Quantizer{T}(chunksize, msbsize)
 
         compressor = Compressor(chunksize, quantizer, fingerprint)
         store = Store(compressor, Dict(), 0, 0)
 
-        return new(T, typemin(T), typemax(T), permutations, store)
+        return new(T, typemin(T), typemax(T), store, is_patcher, GDFile(Vector(undef, 0), Vector(undef, 0), 0))
     end
 end
 
@@ -43,11 +42,15 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     q = Quantizer{p.qtype}(weights)
     qweights = [quantize(q, w) for w in weights]
 
-    # shift high entropy weights
-    permute!(qweights, p.permutations)
-
     # gd compression
     gdfile = compress!(p.store, qweights)
+
+    # patching
+    if p.is_patcher
+        GD.patch!(gdfile, p.gdfile)
+    else
+        p.gdfile = gdfile
+    end
 
     STATS.common.req_data = gdfile
 
@@ -66,6 +69,13 @@ and dequantization are applied before deserialization.
 function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
+    # patching
+    if p.is_patcher
+        p.gdfile = payload.gdfile
+    else
+        GD.unpatch!(payload.gdfile, p.gdfile)
+    end
+
     push!(STATS.common.res_data, payload.gdfile)
 
     # gd decompression
@@ -76,12 +86,11 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
     STATS.network.num_requested_bases = p.store.num_requested_bases
     qweights = extract(p.store, payload.gdfile)
 
-    # shift back high entropy weights
-    invpermute!(qweights, p.permutations)
-
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)
     weights = [dequantize(q, w) for w in qweights]
 
     return weights
 end
+
+

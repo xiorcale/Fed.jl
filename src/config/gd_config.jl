@@ -15,7 +15,7 @@ struct GDConfig{T <: Unsigned} <: Configuration
         chunksize::Int, 
         fingerprint::Function,
         msbsize::T,
-        permutations_file::String
+        is_patcher::Bool
     ) where T <: Real = new(
         CommonConfig{T}(
             serverurl, 
@@ -23,7 +23,7 @@ struct GDConfig{T <: Unsigned} <: Configuration
             fraction_clients,
             num_total_clients
         ),
-        GDPayloadSerde{T}(chunksize, fingerprint, msbsize, permutations_file),
+        GDPayloadSerde{T}(chunksize, fingerprint, msbsize, is_patcher),
         chunksize,
         fingerprint,
         msbsize
