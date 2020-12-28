@@ -2,7 +2,7 @@ using GD
 using JLD
 
 
-struct GDPayload
+mutable struct GDPayload
     gdfile::GDFile
     minval::Float32
     maxval::Float32
@@ -47,8 +47,10 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
 
     # patching
     if p.is_patcher
-        GD.patch!(gdfile, p.gdfile)
+        # client side
+        gdfile = GD.patch(gdfile, p.gdfile)
     else
+        # server side
         p.gdfile = gdfile
     end
 
@@ -71,9 +73,15 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
 
     # patching
     if p.is_patcher
+        # client side
         p.gdfile = payload.gdfile
     else
-        GD.unpatch!(payload.gdfile, p.gdfile)
+        # server side
+        payload.gdfile = GD.unpatch(payload.gdfile, p.gdfile)
+        num_identical_hash = sum([1 for el in payload.gdfile.hashes if el == [0x00]])
+        num_identical_dev = sum([1 for el in payload.gdfile.deviations if el == [0x00]])
+        STATS.network.num_identical_hashes += num_identical_hash
+        STATS.network.num_identical_devs += num_identical_dev
     end
 
     push!(STATS.common.res_data, payload.gdfile)
@@ -84,6 +92,8 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
     # can also update the number of requested bases, to make sure the one requested by
     # this client are taken into account.
     STATS.network.num_requested_bases = p.store.num_requested_bases
+    
+    
     qweights = extract(p.store, payload.gdfile)
 
     # dequantize weights
