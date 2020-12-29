@@ -10,7 +10,8 @@ mutable struct GDStats{T <: Real} <: Statistics
         gdfile_length = ceil(Int, num_weights / config.chunksize)
         # call hash function with fake data to find the hash size
         hash_size = sizeof(config.fingerprint([0x00]))
-        deviation_size = sizeof(config.common.dtype) * 8 - config.msbsize
+        lsbsie = sizeof(config.common.dtype) * 8 - config.msbsize
+        deviation_size = lsbsie * config.chunksize / 8
         basis_size = config.msbsize * config.chunksize / 8
 
         return new(
@@ -20,7 +21,7 @@ mutable struct GDStats{T <: Real} <: Statistics
                 config.common.num_total_clients, 
                 num_weights
             ),
-            GDNetStats(gdfile_length, basis_size, hash_size, deviation_size),
+            GDNetStats(gdfile_length, basis_size, deviation_size, hash_size),
             Vector{Float32}(undef, 0),
             Vector{Float32}(undef, 0)
         )
