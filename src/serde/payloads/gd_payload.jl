@@ -1,5 +1,4 @@
 using GD
-using JLD
 
 
 mutable struct GDPayload
@@ -77,11 +76,12 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
         p.gdfile = payload.gdfile
     else
         # server side
-        payload.gdfile = GD.unpatch(payload.gdfile, p.gdfile)
         num_identical_hash = sum([1 for el in payload.gdfile.hashes if el == [0x00]])
         num_identical_dev = sum([1 for el in payload.gdfile.deviations if el == [0x00]])
         STATS.network.num_identical_hashes += num_identical_hash
         STATS.network.num_identical_devs += num_identical_dev
+
+        payload.gdfile = GD.unpatch(payload.gdfile, p.gdfile)
     end
 
     push!(STATS.common.res_data, payload.gdfile)
