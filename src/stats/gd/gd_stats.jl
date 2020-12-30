@@ -10,8 +10,8 @@ mutable struct GDStats{T <: Real} <: Statistics
         gdfile_length = ceil(Int, num_weights / config.chunksize)
         # call hash function with fake data to find the hash size
         hash_size = sizeof(config.fingerprint([0x00]))
-        lsbsie = sizeof(config.common.dtype) * 8 - config.msbsize
-        deviation_size = lsbsie * config.chunksize / 8
+        lsbsize = sizeof(config.common.dtype) * 8 - config.msbsize
+        deviation_size = lsbsize * config.chunksize / 8
         basis_size = config.msbsize * config.chunksize / 8
 
         return new(
