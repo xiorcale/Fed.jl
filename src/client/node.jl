@@ -7,7 +7,7 @@ struct Node{T <: Real}
     host::String
     port::Int
 
-    # hook
+    # proxy
     fit::Function
 
     config::Configuration

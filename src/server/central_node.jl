@@ -14,7 +14,7 @@ struct CentralNode{T <: Real}
     weights::Vector{Float32}
     strategy::Function
 
-    # hook
+    # proxy
     evaluate::Function
 
     config::Configuration
@@ -51,35 +51,43 @@ function fit(central_node::CentralNode)
 
     initialize_stats(central_node.config, length(global_weights))
 
-    for round_num in 1:central_node.config.common.num_comm_rounds
-        @info "Communication round $round_num"
+    jldopen("data/request.jld", "w") do req_file
+        jldopen("data/response.jld", "w") do res_file
 
-        # chose the clients subset for the round
-        clients = sample_clients(central_node.client_manager, central_node.config.common.fraction_clients)
+            for round_num in 1:central_node.config.common.num_comm_rounds
+                @info "Communication round $round_num"
 
-        # serialize the global model
-        payload = serialize_payload(central_node.config.payload_serde, global_weights)
+                # chose the clients subset for the round
+                clients = sample_clients(central_node.client_manager, central_node.config.common.fraction_clients)
 
-        # ask clients to train on the global model
-        clients_payload = fit_clients(central_node.config.common.fit_node, clients, payload)
+                # serialize the global model
+                payload = serialize_payload(central_node.config.payload_serde, global_weights)
 
-        # deserialize the results
-        round_weights = [
-            deserialize_payload(central_node.config.payload_serde, payload, clients[i])
-            for (i, payload) in enumerate(clients_payload)
-        ]
+                # ask clients to train on the global model
+                clients_payload = fit_clients(central_node.config.common.fit_node, clients, payload)
 
-        # update the global model
-        global_weights = central_node.strategy(round_weights)
+                # deserialize the results
+                round_weights = [
+                    deserialize_payload(central_node.config.payload_serde, payload, clients[i])
+                    for (i, payload) in enumerate(clients_payload)
+                ]
 
-        # evaluate global model
-        loss, acc = central_node.evaluate(global_weights)
-        @info "loss: $loss, acc: $acc"
+                write(req_file, "$round_num", global_weights)
+                write(res_file, "$round_num", round_weights)
 
-        # record statistics
-        update_stats!(STATS, round_num, loss, acc)
+                # update the global model
+                global_weights = central_node.strategy(round_weights)
 
-        save("stats.jld", "stats", STATS)
+                # evaluate global model
+                loss, acc = central_node.evaluate(global_weights)
+                @info "loss: $loss, acc: $acc"
+
+                # record statistics
+                update_stats!(STATS, round_num, loss, acc)
+
+                save("stats.jld", "stats", STATS)
+            end
+        end
     end
 end
 
