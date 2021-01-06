@@ -9,10 +9,10 @@ elements from the request with the received ones.
 [Location based metric] Where are the changes occuring in the model?
 """
 function compute_changes_per_element(req_data, res_data)::Vector{Float32}
-return sum([
-    weights .!= req_data
-    for weights in res_data
-]) / length(res_data)
+    return sum([
+        weights .!= req_data
+        for weights in res_data
+    ]) / length(res_data)
 end
 
 

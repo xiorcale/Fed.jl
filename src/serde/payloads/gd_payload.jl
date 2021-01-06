@@ -16,16 +16,17 @@ mutable struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
 
     store::Store
 
-    is_patcher::Bool
-    gdfile::GDFile
+    is_client::Bool
+    # gdfile::GDFile
+    data::Vector{T}
 
-    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, is_patcher::Bool) where T <: Real = begin
+    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, is_client::Bool) where T <: Real = begin
         quantizer = GD.Transform.Quantizer{T}(chunksize, msbsize)
 
         compressor = Compressor(chunksize, quantizer, fingerprint)
         store = Store(compressor, Dict(), 0, 0)
 
-        return new(T, typemin(T), typemax(T), store, is_patcher, GDFile(Vector(undef, 0), Vector(undef, 0), 0))
+        return new(T, typemin(T), typemax(T), store, is_client, Vector{T}(undef, 0))
     end
 end
 
@@ -41,17 +42,15 @@ function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{
     q = Quantizer{p.qtype}(weights)
     qweights = [quantize(q, w) for w in weights]
 
-    # gd compression
-    gdfile = compress!(p.store, qweights)
-
-    # patching
-    if p.is_patcher
-        # client side
-        gdfile = GD.patch(gdfile, p.gdfile)
+    if p.is_client
+        # take only the weights difference to increase values stability
+        qweights -= p.data
     else
         # server side
-        p.gdfile = gdfile
+        p.data = qweights
     end
+
+    gdfile = compress!(p.store, qweights)
 
     STATS.common.req_data = gdfile
 
@@ -70,20 +69,6 @@ and dequantization are applied before deserialization.
 function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
-    # patching
-    if p.is_patcher
-        # client side
-        p.gdfile = payload.gdfile
-    else
-        # server side
-        num_identical_hash = sum([1 for el in payload.gdfile.hashes if el == [0x00]])
-        num_identical_dev = sum([1 for el in payload.gdfile.deviations if el == [0x00]])
-        STATS.network.num_identical_hashes += num_identical_hash
-        STATS.network.num_identical_devs += num_identical_dev
-
-        payload.gdfile = GD.unpatch(payload.gdfile, p.gdfile)
-    end
-
     push!(STATS.common.res_data, payload.gdfile)
 
     # gd decompression
@@ -93,8 +78,14 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
     # this client are taken into account.
     STATS.network.num_requested_bases = p.store.num_requested_bases
     
-    
     qweights = extract(p.store, payload.gdfile)
+
+    if p.is_client
+        p.data = qweights
+    else
+        # add the request payload to the difference
+        qweights += p.data
+    end
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)
