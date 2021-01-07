@@ -8,9 +8,9 @@ struct QuantizedConfig{T <: Unsigned} <: Configuration
         fraction_clients::Float32,
         num_total_clients::Int,
         chunksize::Int,
-        is_patcher::Bool
+        is_client::Bool
     ) where T <: Real = new(
         CommonConfig{T}(serverurl, num_comm_rounds, fraction_clients, num_total_clients),
-        QuantizedPayloadSerde{T}(chunksize, is_patcher)
+        QuantizedPayloadSerde{T}(chunksize, is_client)
     )
 end
