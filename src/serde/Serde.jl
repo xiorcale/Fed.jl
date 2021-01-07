@@ -1,6 +1,7 @@
 module Serde
 
 include("packing.jl")
+export pack, unpack
 
 include("quantizer.jl")
 export Quantizer, quantize, dequantize

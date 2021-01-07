@@ -2,7 +2,7 @@ using ..Fed: STATS
 
 
 mutable struct QPayload{T <: Unsigned}
-    data::Vector{Vector{T}}
+    data::Vector{T}
     minval::Float32
     maxval::Float32
 end
@@ -14,42 +14,19 @@ mutable struct QuantizedPayloadSerde{T <: Unsigned} <: PayloadSerde
     qmax::T
 
     chunksize::Int
-    is_patcher::Bool
+    is_client::Bool
     data::Vector{Vector{T}}
 
-    QuantizedPayloadSerde{T}(chunksize, is_patcher) where T <: Real = new(
+    QuantizedPayloadSerde{T}(chunksize, is_client) where T <: Real = new(
         T,
         typemin(T),
         typemax(T),
         chunksize,
-        is_patcher,
+        is_client,
         Vector{Vector{T}}(undef, 0)
     )
 end
 
-
-function to_chunks(data::Vector{T}, chunksize::Int)::Vector{Vector{T}} where T <: Unsigned
-    chunks = Vector{Vector{T}}(undef, ceil(Int, length(data) / chunksize))
-    for i in 1:length(chunks)-1
-        chunks[i] = data[(i-1) * chunksize + 1:(i * chunksize)]
-    end
-    chunks[end] = data[(length(chunks)-1)*chunksize+1:end]
-    return chunks
-end
-
-
-diff(x, y) = x == y ? [0x00] : x
-patch_quantized(x, y) = diff.(x, y)
-
-function unpatch_quantized(x, y)
-    result = deepcopy(x)
-    for (i, chunk) in enumerate(y)
-        if result[i] == [0x00]
-            result[i] = chunk
-        end
-    end
-    return result
-end
 
 
 """
@@ -64,17 +41,19 @@ function serialize_payload(p::QuantizedPayloadSerde, weights::Vector{Float32})::
     qweights = [quantize(q, w) for w in weights]
     STATS.common.req_data = qweights
 
-    chunks = to_chunks(qweights, p.chunksize)
+    # chunks = to_chunks(qweights, p.chunksize)
 
-    if p.is_patcher
-        chunks = patch_quantized(chunks, p.data)
-    else
-        p.data = chunks
-    end
+    # if p.is_client
+    #     chunks = patch_quantized(chunks, p.data)
+    # else
+    #     p.data = chunks
+    # end
 
     
-    payload = QPayload(chunks, q.minval, q.maxval)
+    # payload = QPayload(chunks, q.minval, q.maxval)
     
+    payload = QPayload(qweights, q.minval, q.maxval)
+
     return pack(payload)
 end
 
@@ -88,21 +67,23 @@ applied after deserialization.
 function deserialize_payload(p::QuantizedPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     payload = unpack(data)
 
-    if p.is_patcher
-        p.data = payload.data
-    else
-        num_identical_chunks = sum([1 for el in payload.data if el == [0x00]])
-        STATS.network.num_identical_chunks += num_identical_chunks
+    # if p.is_client
+    #     p.data = payload.data
+    # else
+    #     num_identical_chunks = sum([1 for el in payload.data if el == [0x00]])
+    #     STATS.network.num_identical_chunks += num_identical_chunks
 
-        payload.data = unpatch_quantized(payload.data, p.data)
-    end
+    #     payload.data = unpatch_quantized(payload.data, p.data)
+    # end
 
-    qweights = reduce(vcat, payload.data)
-    push!(STATS.common.res_data, qweights)
+    # qweights = reduce(vcat, payload.data)
+    # push!(STATS.common.res_data, qweights)
+    push!(STATS.common.res_data, payload.data)
 
     # dequantize weights
     q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)
-    weights = [dequantize(q, w) for w in qweights]
+    # weights = [dequantize(q, w) for w in qweights]
+    weights = [dequantize(q, w) for w in payload.data]
 
     return weights
 end
