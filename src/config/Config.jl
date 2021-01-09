@@ -14,6 +14,9 @@ export VanillaConfig
 include("quantized_config.jl")
 export QuantizedConfig
 
+include("quantized_dedup_config.jl")
+export QuantizedDedupConfig
+
 include("gd_config.jl")
 export GDConfig
 

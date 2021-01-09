@@ -1,15 +1,16 @@
-struct QuantizedConfig{T <: Unsigned} <: Configuration
+struct QuantizedDedupConfig{T <: Unsigned} <: Configuration
     common::CommonConfig{T}
-    payload_serde::QuantizedPayloadSerde
+    payload_serde::QuantizedDedupConfig
 
-    QuantizedConfig{T}(
+    QuantizedDedupConfig{T}(
         serverurl::String,
         num_comm_rounds::Int,
         fraction_clients::Float32,
         num_total_clients::Int,
-        chunksize::Int
+        chunksize::Int,
+        is_client::Bool
     ) where T <: Real = new(
         CommonConfig{T}(serverurl, num_comm_rounds, fraction_clients, num_total_clients),
-        QuantizedPayloadSerde{T}(chunksize)
+        QuantizedDedupPayloadSerde{T}(chunksize, is_client)
     )
 end
