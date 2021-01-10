@@ -45,8 +45,8 @@ end
 
 Updates the network traffic stats of a `GDConfig`.
 """
-function update_stats!(stats::GDNetStats, round_num::Int)
-    num_comm = round_num * STATS.common.num_clients_per_round
+function update_stats!(::Type{T}, stats::GDNetStats, round_num::Int) where T <: Unsigned
+    num_comm = round_num * STATS.base.num_clients_per_round
     gdfile_size = (stats.hash_size + stats.deviation_size) * stats.gdfile_length
     minimal_up_down = gdfile_size * num_comm
 

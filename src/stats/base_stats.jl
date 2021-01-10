@@ -1,11 +1,9 @@
 """
-    CommonStats
+    BaseStats
 
 Every stats common to any configuration.
 """
-mutable struct CommonStats{T <: Real} <: Statistics
-    dtype::Type{T}
-
+mutable struct BaseStats <: Statistics
     # federated learning stats
     num_comm_rounds::Int
     num_clients_per_round::Int
@@ -20,13 +18,12 @@ mutable struct CommonStats{T <: Real} <: Statistics
     req_data::Any
     res_data::Vector{Any}
 
-    CommonStats{T}(
+    BaseStats(
         num_comm_rounds::Int,
         fraction_clients::Float32,
         num_total_clients::Int,
         num_weights::Int
-    ) where T <: Real = new(
-        T,
+    ) = new(
         # fedetated learning
         num_comm_rounds,
         max(round(Int, fraction_clients * num_total_clients), 1),
@@ -42,7 +39,7 @@ mutable struct CommonStats{T <: Real} <: Statistics
 end
 
 function update_stats!(
-    stats::CommonStats,
+    stats::BaseStats,
     loss::Float32,
     accuracy::Float32,
 ) 

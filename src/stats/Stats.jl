@@ -1,11 +1,26 @@
 module Stats
 
-using ..Fed: STATS, Statistics, Configuration, VanillaConfig, QuantizedConfig, GDConfig
+using ..Fed: STATS, Statistics
+
+
+# --------------------------------
+# Include
+# --------------------------------
+
+include("metrics.jl")
+include("base_stats.jl")
+
+include("vanilla/vanilla_net.jl")
+include("vanilla/vanilla_stats.jl")
+
+include("gd/gd_net.jl")
+include("gd/gd_stats.jl")
+
 
 """
     update_stats!(stat, round_num, loss, accuracy)
 
-Update all the statistics at once. This function is intended to be used at the
+Updates all the statistics at once. This function is intended to be used at the
 end of each communication round. It assumes that some values have been updated
 while calling the `PayloadSerde` functions.
 """
@@ -16,26 +31,16 @@ function update_stats!(
     accuracy::Float32
 )
     update_stats!(stats)
-    update_stats!(stats.common, loss, accuracy)
+    update_stats!(stats.base, loss, accuracy)
     update_stats!(stats.network, round_num)
 end
 
 
-export update_stats!
+# --------------------------------
+# Export
+# --------------------------------
 
-include("metrics.jl")
-export compute_changes_per_weights, compute_round_changes
-
-include("common_stats.jl")
-export CommonStats, update_stats!
-
-include("vanilla/vanilla_net.jl")
-include("vanilla/vanilla_stats.jl")
-export VanillaStats, VanillaNetStats, update_stats!
-
-include("gd/gd_net.jl")
-include("gd/gd_stats.jl")
-export GDStats, GDNetStats, update_stats!
+export BaseStats, VanillaStats, GDStats, update_stats!
 
 
 end # module

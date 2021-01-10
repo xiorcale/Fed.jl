@@ -1,21 +1,23 @@
-mutable struct GDStats{T <: Real} <: Statistics
-    common::CommonStats{T}
+using ..Config: GDConfig
+
+
+mutable struct GDStats{T <: Unsigned} <: Statistics
+    base::BaseStats
     network::GDNetStats
 
     hash_round_changes::Vector{Float32}
     deviation_round_changes::Vector{Float32}
 
-    GDStats{T}(config::GDConfig, num_weights::Int) where T <: Real = begin
-        
+    GDStats{T}(config::GDConfig, num_weights::Int) where T <: Unsigned = begin
         gdfile_length = ceil(Int, num_weights / config.chunksize)
         # call hash function with fake data to find the hash size
         hash_size = sizeof(config.fingerprint([0x00]))
-        lsbsize = sizeof(config.common.dtype) * 8 - config.msbsize
+        lsbsize = sizeof(T) * 8 - config.msbsize
         deviation_size = lsbsize * config.chunksize / 8
         basis_size = config.msbsize * config.chunksize / 8
 
         return new(
-            CommonStats{T}(
+            BaseStats(
                 config.base.num_comm_rounds,
                 config.base.fraction_clients,
                 config.base.num_total_clients, 
@@ -29,11 +31,11 @@ mutable struct GDStats{T <: Real} <: Statistics
 end
 
 function update_stats!(stats::GDStats) 
-    req_hashes = stats.common.req_data.hashes
-    res_hashes = map(gdfile -> gdfile.hashes, stats.common.res_data)
+    req_hashes = stats.base.req_data.hashes
+    res_hashes = map(gdfile -> gdfile.hashes, stats.base.res_data)
     push!(stats.hash_round_changes, compute_round_changes(req_hashes, res_hashes))
 
-    req_dev = stats.common.req_data.deviations
-    res_dev = map(gdfile -> gdfile.deviations, stats.common.res_data)
+    req_dev = stats.base.req_data.deviations
+    res_dev = map(gdfile -> gdfile.deviations, stats.base.res_data)
     push!(stats.deviation_round_changes, compute_round_changes(req_dev, res_dev))
 end

@@ -1,5 +1,6 @@
 using LinearAlgebra: normalize
 
+
 """
     compute_changes_per_element(req_data, res_data)
 
@@ -17,7 +18,7 @@ end
 
 
 """
-compute_round_changes(req_data, res_data)
+    compute_round_changes(req_data, res_data)
 
 Computes the percentage of changes occuring for the given round by comparing
 all the element from the request with the received ones.

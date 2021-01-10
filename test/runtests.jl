@@ -2,5 +2,6 @@ using Fed
 using Test
 
 
-include("server.jl")
-include("client.jl")
+# make sure that everything can start up correctly
+include("startup/server.jl")
+include("startup/client.jl")

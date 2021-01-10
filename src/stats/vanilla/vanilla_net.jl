@@ -1,5 +1,5 @@
 """
-    VanillaNetStats
+    VanillaNetStats()
 
 Network statistics for `VanillaConfig`.
 """
@@ -20,8 +20,8 @@ end
 Updates the network traffic stats of a `VanillaConfig`.
 """
 function update_stats!(stats::VanillaNetStats, round_num::Int)
-    num_comm = round_num * STATS.common.num_clients_per_round
-    updown = num_comm * STATS.common.num_weights * sizeof(STATS.common.dtype)
+    num_comm = round_num * STATS.base.num_clients_per_round
+    updown = num_comm * STATS.base.num_weights * sizeof(STATS.T)
     push!(stats.uplink, updown)
     push!(stats.downlink, updown - (stats.num_identical_chunks * 255)) # hardcoded chunksize -1 !!!
 end

@@ -7,29 +7,25 @@ export Statistics, STATS
 
 
 include("serde/Serde.jl")
+using .Serde
+
+
 include("config/Config.jl")
-
-
-using .Config, .Serde
+using .Config
 
 
 
 include("stats/Stats.jl")
-using .Stats: CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats,
-    update_stats!, compute_elements_difference, compute_changes_per_element, 
-    compute_round_changes
-export CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats,
-    update_stats, compute_elements_difference, compute_changes_per_element, 
-    compute_round_changes
+using .Stats
 
 
-function initialize_stats(config::Configuration, num_weights::Int)
-    global STATS = VanillaStats{config.common.dtype}(config, num_weights)
+function initialize_stats(::Type{T}, config::Configuration, num_weights::Int) where T <: Real
+    global STATS = VanillaStats{T}(T, config, num_weights)
 end
 
 
-function initialize_stats(config::GDConfig, num_weights::Int)
-    global STATS = GDStats{config.common.dtype}(config, num_weights)
+function initialize_stats(config::GDConfig{T}, num_weights::Int) where T <: Unsigned
+    global STATS = GDStats{T}(config, num_weights)
 end
 
 export initialize_stats
