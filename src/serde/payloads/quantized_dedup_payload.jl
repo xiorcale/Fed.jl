@@ -83,7 +83,7 @@ function deserialize_payload(
         num_identical_chunks = sum([1 for el in payload.data if el == [0x00]])
         STATS.network.num_identical_chunks += num_identical_chunks
 
-        payload.data = unpatch_quantized(payload.data, p.original_data)
+        payload.data = reverse_diff_deduplication(payload.data, p.original_data)
     end
 
     qweights = reduce(vcat, payload.data)

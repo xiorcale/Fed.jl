@@ -14,12 +14,11 @@ include("config/Config.jl")
 using .Config
 
 
-
 include("stats/Stats.jl")
 using .Stats
 
 
-function initialize_stats(config::VanillaStats, num_weights::Int)
+function initialize_stats(config::VanillaConfig, num_weights::Int)
     global STATS = VanillaStats{Float32}(config, num_weights)
 end
 

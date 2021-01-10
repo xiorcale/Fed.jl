@@ -1,6 +1,6 @@
 using GD
 using GD.Storage: Compressor, Store, GDFile, compress!, extract, patch, unpatch,
-    setup_api_endpoint
+    setup_api_endpoint, validate_remote!
 
 
 """
@@ -26,12 +26,7 @@ information is to be expected after deserialization. Depending on the chosen
 fingerprint, collisions can occur, also leading to a loss of information.
 """
 mutable struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
-    # quantization
-    qmin::T
-    qmax::T
-
     store::Store
-
     is_client::Bool
     gdfile::GDFile
 
@@ -48,7 +43,7 @@ mutable struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
         store = Store(compressor, Dict(), 0, 0)
         @async setup_api_endpoint(store, store_host, store_port)
 
-        return new(typemin(T), typemax(T), store, is_client, GDFile(Vector(undef, 0), Vector(undef, 0), 0))
+        return new(store, is_client, GDFile(Vector(undef, 0), Vector(undef, 0), 0))
     end
 end
 
@@ -123,7 +118,7 @@ function deserialize_payload(
     qweights = extract(p.store, payload.gdfile)
 
     # dequantize weights
-    q = Quantizer{T}(p.qmin, p.qmax, payload.minval, payload.maxval)
+    q = Quantizer{T}(payload.minval, payload.maxval)
     weights = [dequantize(q, w) for w in qweights]
 
     return weights

@@ -18,7 +18,7 @@ Serializes `weights` with the `VanillaPayloadSerde` where only basic
 serialization is applied.
 """
 function serialize_payload(::VanillaPayloadSerde, weights::Vector{Float32})::Vector{UInt8}
-    STATS.common.req_data = weights
+    STATS.base.req_data = weights
     return pack(weights)
 end
 
