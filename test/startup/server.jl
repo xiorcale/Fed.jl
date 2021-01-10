@@ -36,7 +36,7 @@ using SHA
         )
 
         # start and stop server
-        task = @async Fed.Server.start_server(central_node)
+        task = @async Fed.Server.start(central_node)
 
         @test length(central_node.client_manager) == 0
 

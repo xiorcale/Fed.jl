@@ -36,7 +36,7 @@ using SHA
             config
         )
 
-        @async Fed.Server.start_server(central_node)
+        @async Fed.Server.start(central_node)
     end
 
     @testset "Start client" begin

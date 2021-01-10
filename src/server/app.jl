@@ -26,7 +26,7 @@ end
 
 Start a Fed.jl HTTP server.
 """
-function start_server(central_node::CentralNode)
+function start(central_node::CentralNode)
     router = build_router(central_node)
 
     # start the HTTP server
