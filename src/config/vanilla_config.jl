@@ -1,11 +1,14 @@
-struct VanillaConfig{T <: Real} <: Configuration
-    common::CommonConfig{T}
-    payload_serde::VanillaPayloadSerde
+using ..Serde: VanillaPayloadSerde
 
-    VanillaConfig{T}(
-        common_config::CommonConfig{T}
-    ) where T <: Real = new(
-        common_config,
-        VanillaPayloadSerde()
-    )
+
+"""
+    VanillaConfig(base)
+
+Configuration for the baseline, where no compression is applied. The raw data
+are sent over the network.
+"""
+struct VanillaConfig <: Configuration
+    base::BaseConfig
+    payload_serde::VanillaPayloadSerde
+    VanillaConfig(base::BaseConfig) = new(base, VanillaPayloadSerde())
 end

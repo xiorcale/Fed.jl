@@ -7,17 +7,11 @@ export Statistics, STATS
 
 
 include("serde/Serde.jl")
-using .Serde:  PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, 
-    QuantizedDedupPayloadSerde, GDPayloadSerde, serialize_payload, 
-    deserialize_payload, pack, unpack
-export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, 
-    QuantizedDedupPayloadSerde, GDPayloadSerde, serialize_payload,
-    deserialize_payload, pack, unpack
-
-
 include("config/Config.jl")
-using .Config: Configuration, CommonConfig, VanillaConfig, QuantizedConfig, 
-    GDConfig
+
+
+using .Config, .Serde
+
 
 
 include("stats/Stats.jl")

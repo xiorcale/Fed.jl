@@ -1,5 +1,10 @@
-struct Quantizer{T <: Real}
-    type::Type{T}
+"""
+    Quantizer
+
+Apply value quantization by scaling it down from one type to another, which
+requires less bits than the original type.
+"""
+struct Quantizer{T <: Unsigned}
     qmin::Float32
     qmax::Float32
     minval::Float32
@@ -7,25 +12,13 @@ struct Quantizer{T <: Real}
     scale::Float32
     zero_point::Float32
 
-    Quantizer{T}(qmin, qmax, minval, maxval) where T <: Real = begin
-        scale = (maxval - minval) / (qmax - qmin)
-        zero_point =  qmin - minval / scale
-        return new(T, qmin, qmax, minval, maxval, scale, zero_point)
-    end
-
-    Quantizer{T}(minval, maxval) where T <: UInt8 = begin
-        scale = (maxval - minval) / 255
+    Quantizer{T}(minval, maxval) where T <: Unsigned = begin
+        scale = (maxval - minval) / typemax(T)
         zero_point = -minval / scale
-        return new(UInt8, 0, 255, minval, maxval, scale, zero_point)
+        return new(UInt8, 0, typemax(T), minval, maxval, scale, zero_point)
     end
 
-    Quantizer{T}(minval, maxval) where T <: UInt16 = begin
-        scale = (maxval - minval) / 65535
-        zero_point = -minval / scale
-        return new(UInt16, 0, 65535, minval, maxval, scale, zero_point)
-    end
-
-    Quantizer{T}(data::Vector{Float32}) where T <: Real = begin
+    Quantizer{T}(data::Vector{Float32}) where T <: Unsigned = begin
         minval = minimum(data)
         maxval = maximum(data)
         return Quantizer{T}(minval, maxval)
@@ -38,8 +31,8 @@ end
 
 Quantize `x` with the Quantizer `q`.
 """
-quantize(q::Quantizer, x) = x / q.scale + q.zero_point |> q.type
-quantize(q::Quantizer{T}, x) where T <: Integer = round( x / q.scale + q.zero_point) |> q.type
+quantize(q::Quantizer{T}, x) where T <: Unsigned = round(T, x / q.scale + q.zero_point)
+
 
 """
     dequantize(q, x)

@@ -18,7 +18,7 @@ using SHA
     strategy = Fed.Server.federated_averaging
     eval_hook = (weights::Vector{Float32}) -> (0.0f0, 0.0f0)
 
-    common_config = Fed.Config.CommonConfig{UInt8}(
+    base_config = Fed.Config.BaseConfig(
         server_url,
         num_comm_rounds,
         fraction_clients,
@@ -26,7 +26,7 @@ using SHA
     )
 
     function start_stop_server(config)
-        central_node = Fed.Server.CentralNode{config.common.dtype}(
+        central_node = Fed.Server.CentralNode(
             host,
             port,
             weights,
@@ -44,27 +44,18 @@ using SHA
     end
 
     @testset "Start vanilla config" begin
-        local common_config = Fed.Config.CommonConfig{Float32}(
-            server_url,
-            num_comm_rounds,
-            fraction_clients,
-            num_total_clients
-        )
-        config = Fed.Config.VanillaConfig{Float32}(common_config)
+        config = Fed.Config.VanillaConfig(base_config)
         start_stop_server(config)
     end
 
     @testset "Start quantzed config" begin
-        config = Fed.Config.QuantizedConfig{UInt8}(
-            common_config,
-            chunksize
-        )
+        config = Fed.Config.QuantizedConfig{UInt8}(base_config)
         start_stop_server(config)
     end
 
     @testset "Start deduplicated quantized config" begin
         config = Fed.Config.QuantizedDedupConfig{UInt8}(
-            common_config,
+            base_config,
             chunksize,
             is_client
         )
@@ -73,7 +64,7 @@ using SHA
 
     @testset "Start GD config" begin
         config = Fed.Config.GDConfig{UInt8}(
-            common_config,
+            base_config,
             chunksize,
             sha1,
             0x05,

@@ -1,24 +1,32 @@
 module Config
 
-using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde,
-    QuantizedDedupPayloadSerde, GDPayloadSerde
 
+"""
+    Configuration
+
+Interface used by the `CentralNode` and the `Node` to work with any 
+configuration.
+"""
 abstract type Configuration end
-export Configuration
 
-include("common_config.jl")
-export CommonConfig
 
+# --------------------------------
+# Include
+# --------------------------------
+
+include("base_config.jl")
 include("vanilla_config.jl")
-export VanillaConfig
-
 include("quantized_config.jl")
-export QuantizedConfig
-
 include("quantized_dedup_config.jl")
-export QuantizedDedupConfig
-
 include("gd_config.jl")
-export GDConfig
+
+
+# --------------------------------
+# Export
+# --------------------------------
+
+export Configuration, BaseConfig, VanillaConfig, QuantizedConfig,
+    QuantizedDedupConfig, GDConfig
+
 
 end # module

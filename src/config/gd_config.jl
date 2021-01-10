@@ -1,5 +1,16 @@
+using ..Serde: GDPayloadSerde
+
+
+"""
+    GDConfig(base, chunksize, fingerprint, msbsize, host, port, is_client)
+
+Compresses the payload by using a `GD Store`, producing a generally deduplicated
+`GDFile` which are exchanged between the clients and the server. This 
+configuration is making use of the GD.jl library to handle the GD logic
+(https://github.com/xiorcale/GD.jl).
+"""
 struct GDConfig{T <: Unsigned} <: Configuration
-    common::CommonConfig{T}
+    base::BaseConfig
 
     payload_serde::GDPayloadSerde
 
@@ -8,15 +19,15 @@ struct GDConfig{T <: Unsigned} <: Configuration
     msbsize::T
 
     GDConfig{T}(
-        common_config::CommonConfig{T},
+        base::BaseConfig,
         chunksize::Int, 
         fingerprint::Function,
         msbsize::T,
         host::String,
         port::Int,
         is_client::Bool
-    ) where T <: Real = new(
-        common_config,
+    ) where T <: Unsigned = new(
+        base,
         GDPayloadSerde{T}(chunksize, fingerprint, msbsize, host, port, is_client),
         chunksize,
         fingerprint,

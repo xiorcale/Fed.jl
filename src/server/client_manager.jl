@@ -4,10 +4,15 @@ https://github.com/adap/flower/blob/main/src/py/flwr/server/client_manager.py
 """
 
 import Base.length
-
 using StatsBase: sample
 
 
+"""
+    ClientManager()
+
+Structure which manages the clients registration and syncrhonize the server to
+make it work with them.
+"""
 struct ClientManager
     clients::Set{String}
     cond::Threads.Condition
@@ -22,8 +27,9 @@ end
 
 length(cm::ClientManager) = length(cm.clients)
 
+
 """
-    wait_for(cm, num_clients, [timeout=86400])
+    wait_for(cm, num_clients)
 
 Block until at least `num_clients` are available.
 """
@@ -35,14 +41,13 @@ function wait_for(cm::ClientManager, num_clients::Int)
     end
 end
 
+
 """
     num_available_clients(cm)
 
 Returns the number of available clients.
 """
-function num_available_clients(cm::ClientManager)::Integer
-    return length(cm)
-end
+num_available_clients(cm::ClientManager) = length(cm)
 
 
 """
@@ -62,9 +67,10 @@ end
     sample_clients(cm, fraction)
 
 Sample randomly `fraction`% of the clients, without replacement. Returns at
-least one client.
+least one client if the number of available clients > 0.
 """
 function sample_clients(cm::ClientManager, fraction::Float32)::Vector{String}
+    length(cm) == 0 && return Vector{String}(undef, 0)
     num_clients = max(round(Int, fraction * num_available_clients(cm)), 1)
     return sample(collect(cm.clients), num_clients, replace=false)
 end

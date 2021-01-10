@@ -1,10 +1,17 @@
 using JLD
 using HTTP
-using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload, unpack
-using ..Fed: Configuration, STATS, update_stats!, initialize_stats
+using ..Config: Configuration
+using ..Serde: serialize_payload, deserialize_payload, unpack
+using ..Fed: STATS, update_stats!, initialize_stats
 
 
-struct CentralNode{T <: Real}
+"""
+    CentralNode(host, port, weights, strategy, evaluate, config)
+
+`CentralNode` is orchestrating the entire federated learning process, handling
+the clients registration and requesting them to train on their local data.
+"""
+struct CentralNode
     # networking
     host::String
     port::Int
@@ -19,30 +26,14 @@ struct CentralNode{T <: Real}
 
     config::Configuration
 
-    CentralNode{T}(
+    CentralNode(
         host::String,
         port::Int,
         weights::Vector{Float32},
         strategy::Function,
         evaluate::Function,
         config::Configuration
-    ) where T <: Real = begin
-
-        client_manager = ClientManager()
-
-        return new(
-            # networking
-            host, port, client_manager, 
-           
-            # ml
-            weights, strategy,
-           
-            # proxy
-            evaluate,
-            
-            config
-        )
-    end
+    ) = new(host, port, ClientManager(), weights, strategy, evaluate, config)
 end
 
 
@@ -58,16 +49,16 @@ function fit(central_node::CentralNode)
 
     jldopen("data/request.jld", "w") do req_file
         jldopen("data/response.jld", "w") do res_file
-            for round_num in 1:central_node.config.common.num_comm_rounds
+            for round_num in 1:central_node.config.base.num_comm_rounds
                 @info "Communication round $round_num"
 
                 # uplink communication
                 # 1. chose the clients subset for the round.
-                clients = sample_clients(central_node.client_manager, central_node.config.common.fraction_clients)
+                clients = sample_clients(central_node.client_manager, central_node.config.base.fraction_clients)
                 # 2. serialize the global model.
                 payload = serialize_payload(central_node.config.payload_serde, global_weights)
                 # 3. ask clients to train on the global model.
-                clients_payload = fit_clients(central_node.config.common.fit_node, clients, payload)
+                clients_payload = fit_clients(central_node.config.base.fit_node, clients, payload)
 
                 write(req_file, "$round_num", global_weights)
                 client_w = map(p -> p.data, unpack.(clients_payload))
@@ -100,11 +91,15 @@ end
 """
     fit_clients(clients, payload)
 
-Ask each client from `clients` to train on their local data, by using the model
+Asks each client from `clients` to train on their local data, by using the model
 weights contained in the `payload`. Returns a `Vector` where each element is the
 serialized weights of one client.
 """
-function fit_clients(fit_node::String, clients::Vector{String}, payload::Vector{UInt8})::Vector{Vector{UInt8}}
+function fit_clients(
+    fit_node::String,
+    clients::Vector{String},
+    payload::Vector{UInt8}
+)::Vector{Vector{UInt8}}
     # asynchronously ask the clients subset to train, and wait on the results.
     tasks = [@async fit_client(fit_node, client, payload) for client in clients]
     wait.(tasks)
@@ -121,7 +116,11 @@ end
 Asks one `client` to train on its local data, by using the model weights
 contained in the `payload`. Returns the serialized updated `weights`.
 """
-function fit_client(fit_node::String, client::String, payload::Vector{UInt8})::Vector{UInt8}
+function fit_client(
+    fit_node::String,
+    client::String,
+    payload::Vector{UInt8}
+)::Vector{UInt8}
     endpoint = client *  fit_node
     response = HTTP.request("POST", endpoint, [], payload)
     return response.body

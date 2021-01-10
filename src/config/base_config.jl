@@ -1,11 +1,9 @@
 """
-    CommonConfig
+    BaseConfig
 
-Part of the configuration common to any type of configuration.
+Parts of the configuration which are common to any type of configuration.
 """
-struct CommonConfig{T <: Real} 
-    dtype::Type{T}
-
+struct BaseConfig
     # endpoints
     serverurl::String
     register_node::String
@@ -16,13 +14,12 @@ struct CommonConfig{T <: Real}
     fraction_clients::Float32
     num_total_clients::Int
 
-    CommonConfig{T}(
+    BaseConfig(
         serverurl::String,
         num_comm_rounds::Int,
         fraction_clients::Float32,
         num_total_clients::Int,
-    ) where T <: Real = new(
-        T,
+    ) = new(
         serverurl,
         "/register",
         "/fit",

@@ -4,7 +4,7 @@ using Serialization: serialize, deserialize
 """
     pack(data)
 
-Utility function to serialize `data`.
+Utility function to serialize `data` into a byte array.
 """
 function pack(data)::Vector{UInt8}
     buffer = IOBuffer()
@@ -16,8 +16,6 @@ end
 """
     unpack(bytes)
 
-Utility function to deserialize `bytes`.
+Utility function to deserialize `bytes` into its original representation.
 """
-function unpack(bytes::Vector{UInt8})
-    return IOBuffer(bytes) |> deserialize
-end
+unpack(bytes::Vector{UInt8}) = IOBuffer(bytes) |> deserialize

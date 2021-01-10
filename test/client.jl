@@ -12,13 +12,12 @@ using SHA
     chunksize = 256
 
     newconfig() = Fed.Config.QuantizedConfig{UInt8}(
-        Fed.Config.CommonConfig{UInt8}(
+        Fed.Config.BaseConfig(
             server_url,
             num_comm_rounds,
             fraction_clients,
             num_total_clients
-        ),
-        chunksize
+        )
     )
 
     function start_testing_server() 
@@ -28,7 +27,7 @@ using SHA
         eval_hook = (weights::Vector{Float32}) -> (0.0f0, 0.0f0)
         config = newconfig()
         
-        central_node = Fed.Server.CentralNode{config.common.dtype}(
+        central_node = Fed.Server.CentralNode(
             host,
             server_port,
             weights,
@@ -40,20 +39,20 @@ using SHA
         @async Fed.Server.start_server(central_node)
     end
 
-    @testset "Start clients" begin
+    @testset "Start client" begin
         server = start_testing_server()
 
         train_hook = (weights::Vector{Float32}) -> weights
         config = newconfig()
 
-        node = Fed.Client.Node{config.common.dtype}(
+        node = Fed.Client.Node(
             host,
             8081,
             train_hook,
             config
         )
 
-        @async Fed.Client.start_client(node)
+        @async Fed.Client.start(node)
         sleep(2)
         @test true
     end

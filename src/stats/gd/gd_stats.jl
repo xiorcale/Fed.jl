@@ -16,9 +16,9 @@ mutable struct GDStats{T <: Real} <: Statistics
 
         return new(
             CommonStats{T}(
-                config.common.num_comm_rounds,
-                config.common.fraction_clients,
-                config.common.num_total_clients, 
+                config.base.num_comm_rounds,
+                config.base.fraction_clients,
+                config.base.num_total_clients, 
                 num_weights
             ),
             GDNetStats(gdfile_length, basis_size, deviation_size, hash_size),

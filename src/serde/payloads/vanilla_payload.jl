@@ -1,5 +1,13 @@
 using ..Fed: STATS
 
+
+"""
+    VanillaPayloadSerde
+
+Basic serialization where no compression is applied. This `PayloadSerde` is
+only a wrapper around the data serialization in order to match the interface to
+implement.
+"""
 struct VanillaPayloadSerde <: PayloadSerde end
 
 

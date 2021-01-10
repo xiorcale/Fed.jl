@@ -23,27 +23,19 @@ end
 
 
 """
-    diff(x, y)
+    diff_deduplication(x, y)
 
 Returns `x` if `x != y` else `[0x00]`
 """
-diff(x, y) = x == y ? [0x00] : x
+diff_deduplication(x, y) = x == y ? [0x00] : x
 
 
 """
-    patch_quantized(x, y)
-
-Patches `x` by replacing the chunks which are identical in `y` by `[0x00]`.
-"""
-patch_quantized(x, y) = diff.(x, y)
-
-
-"""
-    unpatch_quantized(x, y)
+    reverse_diff_deduplication(x, y)
 
 Unpatches `x` by replacing the `[0x00]` values by the values in `y`.
 """
-function unpatch_quantized(x, y)
+function reverse_diff_deduplication(x, y)
     result = deepcopy(x)
     for (i, chunk) in enumerate(y)
         if result[i] == [0x00]
