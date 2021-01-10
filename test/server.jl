@@ -25,7 +25,7 @@ using SHA
         num_total_clients
     )
 
-    function start_server(config)
+    function start_stop_server(config)
         central_node = Fed.Server.CentralNode{config.common.dtype}(
             host,
             port,
@@ -37,9 +37,10 @@ using SHA
 
         # start and stop server
         task = @async Fed.Server.start_server(central_node)
-        @async Base.throwto(task,  InterruptException())
 
         @test length(central_node.client_manager) == 0
+
+        @async Base.throwto(task,  InterruptException())
     end
 
     @testset "Start vanilla config" begin
@@ -50,7 +51,7 @@ using SHA
             num_total_clients
         )
         config = Fed.Config.VanillaConfig{Float32}(common_config)
-        start_server(config)
+        start_stop_server(config)
     end
 
     @testset "Start quantzed config" begin
@@ -58,7 +59,7 @@ using SHA
             common_config,
             chunksize
         )
-        start_server(config)
+        start_stop_server(config)
     end
 
     @testset "Start deduplicated quantized config" begin
@@ -67,7 +68,7 @@ using SHA
             chunksize,
             is_client
         )
-        start_server(config)
+        start_stop_server(config)
     end
 
     @testset "Start GD config" begin
@@ -80,7 +81,7 @@ using SHA
             9090,
             is_client
         )
-        start_server(config)
+        start_stop_server(config)
     end
 
 end
