@@ -23,15 +23,11 @@ serialization in order to compress the payload. Quantization is a lossy process,
 thus a lost of information is to be expected after deserialization.
 """
 mutable struct QuantizedDedupPayloadSerde{T <: Unsigned} <: PayloadSerde
-    qmin::T
-    qmax::T
     chunksize::Int
     is_client::Bool
     original_data::Vector{Vector{T}}
 
     QuantizedDedupPayloadSerde{T}(chunksize, is_client) where T <: Unsigned = new(
-        typemin(T),
-        typemax(T),
         chunksize,
         is_client,
         Vector{Vector{T}}(undef, 0)
@@ -52,12 +48,12 @@ function serialize_payload(
     # quantize weights
     q = Quantizer{T}(weights)
     qweights = [quantize(q, w) for w in weights]
-    STATS.common.req_data = qweights
+    STATS.base.req_data = qweights
 
     chunks = to_chunks(qweights, p.chunksize)
 
     if p.is_client
-        chunks = diff_deduplication.(chunks, p.data)
+        chunks = diff_deduplication.(chunks, p.original_data)
     else
         p.original_data = chunks
     end
@@ -87,14 +83,14 @@ function deserialize_payload(
         num_identical_chunks = sum([1 for el in payload.data if el == [0x00]])
         STATS.network.num_identical_chunks += num_identical_chunks
 
-        payload.data = unpatch_quantized(payload.data, p.data)
+        payload.data = unpatch_quantized(payload.data, p.original_data)
     end
 
     qweights = reduce(vcat, payload.data)
-    push!(STATS.common.res_data, qweights)
+    push!(STATS.base.res_data, qweights)
 
     # dequantize weights
-    q = Quantizer{T}(p.qmin, p.qmax, payload.minval, payload.maxval)
+    q = Quantizer{T}(payload.minval, payload.maxval)
     weights = [dequantize(q, w) for w in qweights]
 
     return weights

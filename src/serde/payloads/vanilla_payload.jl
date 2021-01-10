@@ -31,6 +31,6 @@ deserialization is applied.
 """
 function deserialize_payload(::VanillaPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
     weights = unpack(data)
-    push!(STATS.common.res_data, weights)
+    push!(STATS.base.res_data, weights)
     return weights
 end

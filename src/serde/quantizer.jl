@@ -5,8 +5,6 @@ Apply value quantization by scaling it down from one type to another, which
 requires less bits than the original type.
 """
 struct Quantizer{T <: Unsigned}
-    qmin::Float32
-    qmax::Float32
     minval::Float32
     maxval::Float32
     scale::Float32
@@ -15,7 +13,7 @@ struct Quantizer{T <: Unsigned}
     Quantizer{T}(minval, maxval) where T <: Unsigned = begin
         scale = (maxval - minval) / typemax(T)
         zero_point = -minval / scale
-        return new(UInt8, 0, typemax(T), minval, maxval, scale, zero_point)
+        return new(minval, maxval, scale, zero_point)
     end
 
     Quantizer{T}(data::Vector{Float32}) where T <: Unsigned = begin

@@ -77,7 +77,7 @@ function serialize_payload(
         p.gdfile = gdfile
     end
 
-    STATS.common.req_data = gdfile
+    STATS.base.req_data = gdfile
 
     payload = GDPayload(gdfile, q.minval, q.maxval)
 
@@ -110,7 +110,7 @@ function deserialize_payload(
         payload.gdfile = GD.unpatch(payload.gdfile, p.gdfile)
     end
 
-    push!(STATS.common.res_data, payload.gdfile)
+    push!(STATS.base.res_data, payload.gdfile)
 
     # gd decompression
     STATS.network.num_unknown_bases += validate_remote!(p.store, payload.gdfile, from)

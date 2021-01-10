@@ -10,8 +10,8 @@ mutable struct VanillaStats{T <: Real} <: Statistics
     weights_difference::Vector{Vector{Float32}}
 
     VanillaStats{T}(config::Configuration, num_weights::Int) where T <: Real = new(
+        T,
         BaseStats(
-            T,
             config.base.num_comm_rounds,
             config.base.fraction_clients,
             config.base.num_total_clients,
