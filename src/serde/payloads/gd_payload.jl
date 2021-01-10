@@ -1,4 +1,6 @@
 using GD
+using GD.Storage: Compressor, Store, GDFile, compress!, extract, patch, unpatch,
+    setup_api_endpoint
 
 
 mutable struct GDPayload
@@ -10,7 +12,6 @@ end
 
 mutable struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
     # quantization
-    qtype::Type{T}
     qmin::T
     qmax::T
 
@@ -19,13 +20,20 @@ mutable struct GDPayloadSerde{T <: Unsigned} <: PayloadSerde
     is_client::Bool
     gdfile::GDFile
 
-    GDPayloadSerde{T}(chunksize::Int, fingerprint::Function, msbsize::T, is_client::Bool) where T <: Real = begin
+    GDPayloadSerde{T}(
+        chunksize::Int,
+        fingerprint::Function,
+        msbsize::T,
+        host::String,
+        port::Int,
+        is_client::Bool
+    ) where T <: Real = begin
         quantizer = GD.Transform.Quantizer{T}(chunksize, msbsize)
-
         compressor = Compressor(chunksize, quantizer, fingerprint)
         store = Store(compressor, Dict(), 0, 0)
+        @async setup_api_endpoint(store, host, port)
 
-        return new(T, typemin(T), typemax(T), store, is_client, GDFile(Vector(undef, 0), Vector(undef, 0), 0))
+        return new(typemin(T), typemax(T), store, is_client, GDFile(Vector(undef, 0), Vector(undef, 0), 0))
     end
 end
 
@@ -36,9 +44,12 @@ end
 Serializes `weights` with the `GDPayloadSerde` where quantization and
 generalized deduplication are applied before serialization.
 """
-function serialize_payload(p::GDPayloadSerde, weights::Vector{Float32})::Vector{UInt8}
+function serialize_payload(
+    p::GDPayloadSerde{T},
+    weights::Vector{Float32}
+)::Vector{UInt8} where T <: Unsigned
     # quantize weights
-    q = Quantizer{p.qtype}(weights)
+    q = Quantizer{T}(weights)
     qweights = [quantize(q, w) for w in weights]
 
     # gd compression
@@ -65,7 +76,11 @@ end
 Deserializes `data` with the `GDPayloadSerde` where generalized deduplication
 and dequantization are applied before deserialization.
 """
-function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::String)::Vector{Float32}
+function deserialize_payload(
+    p::GDPayloadSerde{T},
+    data::Vector{UInt8},
+    from::String
+)::Vector{Float32} where T <: Unsigned
     payload = unpack(data)
 
     # patching
@@ -93,7 +108,7 @@ function deserialize_payload(p::GDPayloadSerde, data::Vector{UInt8}, from::Strin
     qweights = extract(p.store, payload.gdfile)
 
     # dequantize weights
-    q = Quantizer{p.qtype}(p.qmin, p.qmax, payload.minval, payload.maxval)
+    q = Quantizer{T}(p.qmin, p.qmax, payload.minval, payload.maxval)
     weights = [dequantize(q, w) for w in qweights]
 
     return weights

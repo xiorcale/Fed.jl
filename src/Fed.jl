@@ -5,22 +5,28 @@ abstract type Statistics end
 STATS = Statistics
 export Statistics, STATS
 
-include("common/tools.jl")
-export curry
-
 
 include("serde/Serde.jl")
-using .Serde:  PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload, pack, unpack
-export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde, serialize_payload, deserialize_payload, pack, unpack
+using .Serde:  PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, 
+    QuantizedDedupPayloadSerde, GDPayloadSerde, serialize_payload, 
+    deserialize_payload, pack, unpack
+export PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, 
+    QuantizedDedupPayloadSerde, GDPayloadSerde, serialize_payload,
+    deserialize_payload, pack, unpack
 
 
 include("config/Config.jl")
-using .Config: Configuration, VanillaConfig, QuantizedConfig, GDConfig, CommonConfig
+using .Config: Configuration, CommonConfig, VanillaConfig, QuantizedConfig, 
+    GDConfig
 
 
 include("stats/Stats.jl")
-using .Stats: CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats!, compute_elements_difference, compute_changes_per_element, compute_round_changes
-export CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats, update_stats, compute_elements_difference, compute_changes_per_element, compute_round_changes
+using .Stats: CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats,
+    update_stats!, compute_elements_difference, compute_changes_per_element, 
+    compute_round_changes
+export CommonStats, VanillaStats, GDStats, VanillaNetStats, GDNetStats,
+    update_stats, compute_elements_difference, compute_changes_per_element, 
+    compute_round_changes
 
 
 function initialize_stats(config::Configuration, num_weights::Int)

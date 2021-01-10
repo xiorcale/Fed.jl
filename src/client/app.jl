@@ -1,6 +1,6 @@
 using GD
 using HTTP
-using ..Fed: curry, initialize_stats, VanillaConfig, QuantizedConfig, GDConfig
+using ..Fed: initialize_stats, VanillaConfig, QuantizedConfig, GDConfig
 
 """
     build_router(node)
@@ -10,14 +10,19 @@ Builds the routes to the node endpoints.
 function build_router(node::Node)
     router = HTTP.Router()
 
-    HTTP.@register(router, "POST", node.config.common.fit_node, curry(fit_service, node))
+    HTTP.@register(
+        router,
+        "POST",
+        node.config.common.fit_node,
+        (request::HTTP.Request) -> fit_service(node, request)
+    )
 
     # setup GD store endpoint if we're unsing GDPayloadSerde
-    try
-        HTTP.@register(router, "GET", node.config.common.gd_bases, curry(GD.return_bases, node.config.payload_serde.store))
-    catch
+    # try
+    #     HTTP.@register(router, "GET", node.config.common.gd_bases, curry(GD.return_bases, node.config.payload_serde.store))
+    # catch
         # nothing to do, it is not a GD config...
-    end
+    # end
 
     return router
 end

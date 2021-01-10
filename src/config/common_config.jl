@@ -10,7 +10,6 @@ struct CommonConfig{T <: Real}
     serverurl::String
     register_node::String
     fit_node::String
-    gd_bases::String
 
     # federated learning
     num_comm_rounds::Int
@@ -27,7 +26,6 @@ struct CommonConfig{T <: Real}
         serverurl,
         "/register",
         "/fit",
-        "/bases",
         num_comm_rounds,
         fraction_clients,
         num_total_clients

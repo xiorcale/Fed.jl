@@ -1,6 +1,7 @@
 module Config
 
-using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde, GDPayloadSerde
+using ..Fed: PayloadSerde, VanillaPayloadSerde, QuantizedPayloadSerde,
+    QuantizedDedupPayloadSerde, GDPayloadSerde
 
 abstract type Configuration end
 export Configuration

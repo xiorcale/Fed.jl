@@ -8,22 +8,16 @@ struct GDConfig{T <: Unsigned} <: Configuration
     msbsize::T
 
     GDConfig{T}(
-        serverurl::String,
-        num_comm_rounds::Int,
-        fraction_clients::Float32,
-        num_total_clients::Int,
+        common_config::CommonConfig{T},
         chunksize::Int, 
         fingerprint::Function,
         msbsize::T,
+        host::String,
+        port::Int,
         is_client::Bool
     ) where T <: Real = new(
-        CommonConfig{T}(
-            serverurl, 
-            num_comm_rounds,
-            fraction_clients,
-            num_total_clients
-        ),
-        GDPayloadSerde{T}(chunksize, fingerprint, msbsize, is_client),
+        common_config,
+        GDPayloadSerde{T}(chunksize, fingerprint, msbsize, host, port, is_client),
         chunksize,
         fingerprint,
         msbsize

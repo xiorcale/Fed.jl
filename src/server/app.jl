@@ -1,6 +1,6 @@
 using GD
 using HTTP
-using ..Fed: curry, VanillaConfig, QuantizedConfig, GDConfig
+using ..Fed: VanillaConfig, QuantizedConfig, GDConfig
 
 
 
@@ -12,14 +12,19 @@ Builds the routes to the central node endpoints.
 function build_router(central_node::CentralNode)::HTTP.Router
     router = HTTP.Router()
 
-    HTTP.@register(router, "POST", central_node.config.common.register_node, curry(register_client!, central_node.client_manager))
+    HTTP.@register(
+        router,
+        "POST",
+        central_node.config.common.register_node,
+        (request::HTTP.Request) -> register_client!(central_node.client_manager, request)
+    )
 
     # setup GD store endpoint if we're unsing GDPayloadSerde
-    try
-        HTTP.@register(router, "GET", central_node.config.common.gd_bases, curry(GD.return_bases, central_node.config.payload_serde.store))
-    catch
-        # nothing to do, it is not a GD config...
-    end
+    # try
+    #     HTTP.@register(router, "GET", central_node.config.common.gd_bases, curry(GD.return_bases, central_node.config.payload_serde.store))
+    # catch
+    #     # nothing to do, it is not a GD config...
+    # end
 
     return router
 end

@@ -3,13 +3,10 @@ struct QuantizedConfig{T <: Unsigned} <: Configuration
     payload_serde::QuantizedPayloadSerde
 
     QuantizedConfig{T}(
-        serverurl::String,
-        num_comm_rounds::Int,
-        fraction_clients::Float32,
-        num_total_clients::Int,
+        common_config::CommonConfig{T},
         chunksize::Int
     ) where T <: Real = new(
-        CommonConfig{T}(serverurl, num_comm_rounds, fraction_clients, num_total_clients),
+        common_config,
         QuantizedPayloadSerde{T}(chunksize)
     )
 end
