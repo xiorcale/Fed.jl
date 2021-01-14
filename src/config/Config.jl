@@ -26,7 +26,7 @@ include("gd_config.jl")
 # --------------------------------
 
 export Configuration, BaseConfig, VanillaConfig, QuantizedConfig,
-    QDiffConfig, GDConfig
+    QDiffConfig, QDiffStaticConfig, GDConfig
 
 
 end # module

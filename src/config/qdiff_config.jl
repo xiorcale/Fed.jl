@@ -1,4 +1,4 @@
-using ..Serde: QDiffPayloadSerde
+using ..Serde: QDiffPayloadSerde, QDiffStaticPayloadSerde
 
 
 """
@@ -19,5 +19,24 @@ struct QDiffConfig{T <: Unsigned} <: Configuration
     ) where T <: Unsigned = new(
         base,
         QDiffPayloadSerde{T}(chunksize, is_client)
+    )
+end
+
+"""
+    QDiffStaticConfif(base, chunksize, is_client)
+
+Same as QDiffConfig with a static quantization range of [-1.0, 1.0].
+"""
+struct QDiffStaticConfig{T <: Unsigned} <: Configuration
+    base::BaseConfig
+    payload_serde::QDiffStaticPayloadSerde
+
+    QDiffStaticConfig{T}(
+        base::BaseConfig,
+        chunksize::Int,
+        is_client::Bool
+    ) where T <: Unsigned = new(
+        base,
+        QDiffStaticPayloadSerde{T}(chunksize, is_client)
     )
 end
