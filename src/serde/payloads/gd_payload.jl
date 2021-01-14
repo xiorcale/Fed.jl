@@ -11,7 +11,7 @@ built on top of quantization, the same metadata are presnts, while the structure
 of the data is under the form of a small `GDFile`.
 """
 mutable struct GDPayload
-    gdfile::GDFile
+    data::GDFile
     minval::Float32
     maxval::Float32
 end
@@ -67,9 +67,9 @@ function serialize_payload(
 
     # patching
     if p.is_client
-        gdfile = GD.patch(gdfile, p.gdfile)
+        gdfile = GD.patch(gdfile, p.data)
     else
-        p.gdfile = gdfile
+        p.data = gdfile
     end
 
     STATS.base.req_data = gdfile
@@ -95,14 +95,14 @@ function deserialize_payload(
 
     # patching
     if p.is_client
-        p.gdfile = payload.gdfile
+        p.data = payload.gdfile
     else
         num_identical_hash = sum([1 for el in payload.gdfile.hashes if el == [0x00]])
         num_identical_dev = sum([1 for el in payload.gdfile.deviations if el == [0x00]])
         STATS.network.num_identical_hashes += num_identical_hash
         STATS.network.num_identical_devs += num_identical_dev
 
-        payload.gdfile = GD.unpatch(payload.gdfile, p.gdfile)
+        payload.gdfile = GD.unpatch(payload.gdfile, p.data)
     end
 
     push!(STATS.base.res_data, payload.gdfile)

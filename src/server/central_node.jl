@@ -67,7 +67,7 @@ function fit(central_node::CentralNode)
                 clients_payload = fit_clients(central_node.config.base.fit_node, clients, payload)
 
                 write(req_file, "$round_num", global_weights)
-                client_w = map(p -> p.gdfile, unpack.(clients_payload))
+                client_w = map(p -> p.data, unpack.(clients_payload))
                 write(res_file, "$round_num", client_w)
                 
                 # downlink communication
