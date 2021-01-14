@@ -67,9 +67,9 @@ function serialize_payload(
 
     # patching
     if p.is_client
-        gdfile = GD.patch(gdfile, p.data)
+        gdfile = GD.patch(gdfile, p.gdfile)
     else
-        p.data = gdfile
+        p.gdfile = gdfile
     end
 
     STATS.base.req_data = gdfile
@@ -95,27 +95,27 @@ function deserialize_payload(
 
     # patching
     if p.is_client
-        p.data = payload.gdfile
+        p.gdfile = payload.data
     else
-        num_identical_hash = sum([1 for el in payload.gdfile.hashes if el == [0x00]])
-        num_identical_dev = sum([1 for el in payload.gdfile.deviations if el == [0x00]])
+        num_identical_hash = sum([1 for el in payload.data.hashes if el == [0x00]])
+        num_identical_dev = sum([1 for el in payload.data.deviations if el == [0x00]])
         STATS.network.num_identical_hashes += num_identical_hash
         STATS.network.num_identical_devs += num_identical_dev
 
-        payload.gdfile = GD.unpatch(payload.gdfile, p.data)
+        payload.data = GD.unpatch(payload.data, p.gdfile)
     end
 
-    push!(STATS.base.res_data, payload.gdfile)
+    push!(STATS.base.res_data, payload.data)
 
     # gd decompression
-    STATS.network.num_unknown_bases += validate_remote!(p.store, payload.gdfile, from)
+    STATS.network.num_unknown_bases += validate_remote!(p.store, payload.data, from)
     # since deserializing a client payload means the client is done with his work, we
     # can also update the number of requested bases, to make sure the one requested by
     # this client are taken into account.
     STATS.network.num_requested_bases = p.store.num_requested_bases
 
 
-    qweights = extract(p.store, payload.gdfile)
+    qweights = extract(p.store, payload.data)
 
     # dequantize weights
     q = Quantizer{T}(payload.minval, payload.maxval)

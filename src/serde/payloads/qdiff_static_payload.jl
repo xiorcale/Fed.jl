@@ -45,7 +45,7 @@ function serialize_payload(
         p.original_data = chunks
     end
     
-    payload = QDiffPayload{T}(chunks, q.minval, q.maxval)
+    payload = QDiffPayload{T}(chunks, p.quantizer.minval, p.quantizer.maxval)
 
     return pack(payload)
 end

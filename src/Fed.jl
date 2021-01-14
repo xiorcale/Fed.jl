@@ -30,6 +30,10 @@ function initialize_stats(config::QDiffConfig{T}, num_weights::Int) where T <: U
     global STATS = VanillaStats{T}(config, num_weights)
 end
 
+function initialize_stats(config::QDiffStaticConfig{T}, num_weights::Int) where T <: Unsigned
+    global STATS = VanillaStats{T}(config, num_weights)
+end
+
 function initialize_stats(config::GDConfig{T}, num_weights::Int) where T <: Unsigned
     global STATS = GDStats{T}(config, num_weights)
 end

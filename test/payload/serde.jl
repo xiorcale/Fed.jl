@@ -44,6 +44,12 @@ using SHA
         @test sum(res - weights) / length(weights) < 0.1 # quantzation generates a small error
     end
 
+    @testset "Quantized static diff" begin
+        config = Fed.Config.QDiffStaticConfig{UInt8}(base_config, chunksize, is_client)
+        res = serde(config)
+        @test sum(res - weights) / length(weights) < 0.1 # quantzation generates a small error
+    end
+
     @testset "GD" begin
         config = Fed.Config.GDConfig{UInt8}(base_config, chunksize, sha1, 0x05, host, 9090, is_client)
         res = serde(config)
