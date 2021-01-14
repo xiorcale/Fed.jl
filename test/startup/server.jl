@@ -48,13 +48,13 @@ using SHA
         start_stop_server(config)
     end
 
-    @testset "Start quantzed config" begin
+    @testset "Start quantized config" begin
         config = Fed.Config.QuantizedConfig{UInt8}(base_config)
         start_stop_server(config)
     end
 
-    @testset "Start deduplicated quantized config" begin
-        config = Fed.Config.QuantizedDedupConfig{UInt8}(
+    @testset "Start QDiff config" begin
+        config = Fed.Config.QDiffConfig{UInt8}(
             base_config,
             chunksize,
             is_client

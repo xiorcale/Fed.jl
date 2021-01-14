@@ -26,7 +26,7 @@ function initialize_stats(config::QuantizedConfig{T}, num_weights::Int) where T 
     global STATS = VanillaStats{T}(config, num_weights)
 end
 
-function initialize_stats(config::QuantizedDedupConfig{T}, num_weights::Int) where T <: Unsigned
+function initialize_stats(config::QDiffConfig{T}, num_weights::Int) where T <: Unsigned
     global STATS = VanillaStats{T}(config, num_weights)
 end
 

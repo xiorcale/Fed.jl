@@ -38,8 +38,8 @@ using SHA
         @test sum(res - weights) / length(weights) < 0.1 # quantzation generates a small error
     end
     
-    @testset "Quantized dedup" begin
-        config = Fed.Config.QuantizedDedupConfig{UInt8}(base_config, chunksize, is_client)
+    @testset "Quantized diff" begin
+        config = Fed.Config.QDiffConfig{UInt8}(base_config, chunksize, is_client)
         res = serde(config)
         @test sum(res - weights) / length(weights) < 0.1 # quantzation generates a small error
     end
