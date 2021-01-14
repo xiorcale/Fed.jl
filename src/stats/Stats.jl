@@ -25,11 +25,11 @@ end of each communication round. It assumes that some values have been updated
 while calling the `PayloadSerde` functions.
 """
 function update_stats!(
-    stats::Statistics, 
+    stats::T, 
     round_num::Int,
     loss::Float32,
     accuracy::Float32
-)
+) where T <: Statistics
     update_stats!(stats)
     update_stats!(stats.base, loss, accuracy)
     update_stats!(stats.network, round_num)

@@ -2,6 +2,7 @@ using ..Config: GDConfig
 
 
 mutable struct GDStats{T <: Unsigned} <: Statistics
+    T::Type{T}
     base::BaseStats
     network::GDNetStats
 
@@ -17,6 +18,7 @@ mutable struct GDStats{T <: Unsigned} <: Statistics
         basis_size = config.msbsize * config.chunksize / 8
 
         return new(
+            T,
             BaseStats(
                 config.base.num_comm_rounds,
                 config.base.fraction_clients,

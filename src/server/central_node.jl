@@ -37,6 +37,12 @@ struct CentralNode
 end
 
 
+function get_store_url(url)
+    protocol, url, port = split(url, ":")
+    return protocol * ":" * url * ":" * string(parse(Int, port) + 1010)
+end
+
+
 """
     fit(central_node)
 
@@ -61,13 +67,13 @@ function fit(central_node::CentralNode)
                 clients_payload = fit_clients(central_node.config.base.fit_node, clients, payload)
 
                 write(req_file, "$round_num", global_weights)
-                client_w = map(p -> p.data, unpack.(clients_payload))
+                client_w = map(p -> p.gdfile, unpack.(clients_payload))
                 write(res_file, "$round_num", client_w)
                 
                 # downlink communication
                 # 4. deserialize the results.
                 round_weights = [
-                    deserialize_payload(central_node.config.payload_serde, payload, clients[i])
+                    deserialize_payload(central_node.config.payload_serde, payload, get_store_url(clients[i]))
                     for (i, payload) in enumerate(clients_payload)
                 ]
 

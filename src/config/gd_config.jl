@@ -23,12 +23,12 @@ struct GDConfig{T <: Unsigned} <: Configuration
         chunksize::Int, 
         fingerprint::Function,
         msbsize::T,
-        host::String,
-        port::Int,
+        store_host::String,
+        store_port::Int,
         is_client::Bool
     ) where T <: Unsigned = new(
         base,
-        GDPayloadSerde{T}(chunksize, fingerprint, msbsize, host, port, is_client),
+        GDPayloadSerde{T}(chunksize, fingerprint, msbsize, store_host, store_port, is_client),
         chunksize,
         fingerprint,
         msbsize
