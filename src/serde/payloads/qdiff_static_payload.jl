@@ -12,7 +12,7 @@ mutable struct QDiffStaticPayloadSerde{T <: Unsigned} <: PayloadSerde
     chunksize::Int
     is_client::Bool
     quantizer::Quantizer{T}
-    original_data::Vector{Vector{T}}
+    original_data::Vector{T}
 
     QDiffStaticPayloadSerde{T}(chunksize, is_client) where T <: Unsigned = new(
         chunksize,
@@ -37,15 +37,14 @@ function serialize_payload(
     qweights = [quantize(p.quantizer, w) for w in weights]
     STATS.base.req_data = qweights
 
-    chunks = to_chunks(qweights, p.chunksize)
-
     if p.is_client
-        chunks = diff.(chunks, p.original_data)
+        patched_file = diff(p.original_data, qweights)
     else
-        p.original_data = chunks
+        p.original_data = qweights
+        patched_file = Patch{T}(UnitRange[], qweights)
     end
     
-    payload = QDiffPayload{T}(chunks, p.quantizer.minval, p.quantizer.maxval)
+    payload = QDiffPayload{T}(patched_file, p.quantizer.minval, p.quantizer.maxval)
 
     return pack(payload)
 end
@@ -65,18 +64,17 @@ function deserialize_payload(
     payload = unpack(data)
 
     if p.is_client
-        p.original_data = payload.data
+        qweights = payload.data.data
+        p.original_data = qweights
     else
-        num_identical_chunks = sum([1 for el in payload.data if el == [0x00]])
-        STATS.network.num_identical_chunks += num_identical_chunks
+        delta_earned = sum(length.(payload.data.range)) * sizeof(T) - (8 * length(payload.data.range))
+        STATS.network.delta_earned += delta_earned
 
-        payload.data = patch(payload.data, p.original_data)
-    end
+        qweights = patch(p.original_data, payload.data)
+        push!(STATS.base.res_data, qweights)
+    end    
 
-    qweights = reduce(vcat, payload.data)
-    push!(STATS.base.res_data, qweights)
-
-    # dequantize weightsl)
+    # dequantize weights
     weights = [dequantize(p.quantizer, w) for w in qweights]
 
     return weights

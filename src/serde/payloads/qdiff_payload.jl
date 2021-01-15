@@ -9,7 +9,7 @@ in a different way than `QPayload` in order to diff-deduplicate the client-side
 payloads by chunks.
 """
 mutable struct QDiffPayload{T <: Unsigned}
-    data::Vector{Vector{T}}
+    data::Patch{T}
     minval::Float32
     maxval::Float32
 end
@@ -25,7 +25,7 @@ thus a lost of information is to be expected after deserialization.
 mutable struct QDiffPayloadSerde{T <: Unsigned} <: PayloadSerde
     chunksize::Int
     is_client::Bool
-    original_data::Vector{Vector{T}}
+    original_data::Vector{T}
 
     QDiffPayloadSerde{T}(chunksize, is_client) where T <: Unsigned = new(
         chunksize,
@@ -50,15 +50,14 @@ function serialize_payload(
     qweights = [quantize(q, w) for w in weights]
     STATS.base.req_data = qweights
 
-    chunks = to_chunks(qweights, p.chunksize)
-
     if p.is_client
-        chunks = diff.(chunks, p.original_data)
+        patched_file = diff(p.original_data, qweights)
     else
-        p.original_data = chunks
+        p.original_data = qweights
+        patched_file = Patch{T}(UnitRange[], qweights)
     end
     
-    payload = QDiffPayload{T}(chunks, q.minval, q.maxval)
+    payload = QDiffPayload{T}(patched_file, q.minval, q.maxval)
 
     return pack(payload)
 end
@@ -78,16 +77,15 @@ function deserialize_payload(
     payload = unpack(data)
 
     if p.is_client
-        p.original_data = payload.data
+        qweights = payload.data.data
+        p.original_data = qweights
     else
-        num_identical_chunks = sum([1 for el in payload.data if el == [0x00]])
-        STATS.network.num_identical_chunks += num_identical_chunks
+        delta_earned = sum(length.(payload.data.range)) * sizeof(T) - (8 * length(payload.data.range))
+        STATS.network.delta_earned += delta_earned
 
-        payload.data = patch(payload.data, p.original_data)
+        qweights = patch(p.original_data, payload.data)
+        push!(STATS.base.res_data, qweights)
     end
-
-    qweights = reduce(vcat, payload.data)
-    push!(STATS.base.res_data, qweights)
 
     # dequantize weights
     q = Quantizer{T}(payload.minval, payload.maxval)
