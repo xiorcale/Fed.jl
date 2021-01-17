@@ -9,7 +9,7 @@ mutable struct GDStats{T <: Unsigned} <: Statistics
     hash_round_changes::Vector{Float32}
     deviation_round_changes::Vector{Float32}
 
-    GDStats{T}(config::GDConfig, num_weights::Int) where T <: Unsigned = begin
+    GDStats{T}(config::Configuration, num_weights::Int) where T <: Unsigned = begin
         gdfile_length = ceil(Int, num_weights / config.chunksize)
         # call hash function with fake data to find the hash size
         hash_size = sizeof(config.fingerprint([0x00]))

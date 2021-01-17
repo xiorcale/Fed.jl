@@ -38,6 +38,11 @@ function initialize_stats(config::GDConfig{T}, num_weights::Int) where T <: Unsi
     global STATS = GDStats{T}(config, num_weights)
 end
 
+function initialize_stats(config::GDStaticConfig{T}, num_weights::Int) where T <: Unsigned
+    global STATS = GDStats{T}(config, num_weights)
+end
+
+
 export initialize_stats
 
 

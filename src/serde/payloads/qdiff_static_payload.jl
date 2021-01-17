@@ -38,7 +38,7 @@ function serialize_payload(
     STATS.base.req_data = qweights
 
     if p.is_client
-        patched_file = diff(p.original_data, qweights)
+        patched_file = diff(p.original_data, qweights, sizeof(T))
     else
         p.original_data = qweights
         patched_file = Patch{T}(UnitRange[], qweights)

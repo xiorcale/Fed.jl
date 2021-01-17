@@ -8,7 +8,6 @@ module Serde
 # tools
 include("packing.jl")
 include("quantizer.jl")
-# include("diff.jl")
 include("delta_compressor.jl")
 
 # payload serde
@@ -18,6 +17,7 @@ include("payloads/quantized_payload.jl")
 include("payloads/qdiff_payload.jl")
 include("payloads/qdiff_static_payload.jl")
 include("payloads/gd_payload.jl")
+include("payloads/gd_static_payload.jl")
 
 
 # --------------------------------

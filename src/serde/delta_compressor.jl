@@ -5,8 +5,8 @@ struct Patch{T <: Any}
 end
 
 
-function diff(old::Vector{T}, new::Vector{T})::Patch{T} where T <: Any
-    min_range_dist = (2 * sizeof(Int32)) / sizeof(T) - 1
+function diff(old::Vector{T}, new::Vector{T}, sizeof_T::Int)::Patch{T} where T <: Any
+    min_range_dist = (2 * sizeof(Int32)) / sizeof_T - 1
     range = Vector{UnitRange{Int32}}()
     data = Vector{T}()
 
