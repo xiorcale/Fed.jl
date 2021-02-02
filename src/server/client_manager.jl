@@ -10,7 +10,7 @@ using StatsBase: sample
 """
     ClientManager()
 
-Structure which manages the clients registration and syncrhonize the server to
+Structure which manages the clients registration and syncrhonizes the server to
 make it work with them.
 """
 struct ClientManager
@@ -24,12 +24,16 @@ struct ClientManager
     end
 end
 
+"""
+    length(cm::ClientManager)
 
+Return the number of client managed by the `ClientManager`.
+"""
 length(cm::ClientManager) = length(cm.clients)
 
 
 """
-    wait_for(cm, num_clients)
+    wait_for(cm::ClientManager, num_clients::Int)
 
 Block until at least `num_clients` are available.
 """
@@ -43,17 +47,22 @@ end
 
 
 """
-    num_available_clients(cm)
+    num_available_clients(cm::ClientManager)
 
-Returns the number of available clients.
+Return the number of available clients.
 """
 num_available_clients(cm::ClientManager) = length(cm)
 
 
 """
-    register!(cm, client_url)
+    register!(cm::ClientManager, client_url::String)
 
 Register a new `client_url`.
+
+**Example**
+```julia
+register!(cm, "http://127.0.0.1:8081")
+```
 """
 function register!(cm::ClientManager, client_url::String)
     push!(cm.clients, client_url)
@@ -64,9 +73,9 @@ end
 
 
 """
-    sample_clients(cm, fraction)
+    sample_clients(cm::ClientManager, fraction::Float32)
 
-Sample randomly `fraction`% of the clients, without replacement. Returns at
+Sample randomly `fraction`% of the clients, without replacement. Return at
 least one client if the number of available clients > 0.
 """
 function sample_clients(cm::ClientManager, fraction::Float32)::Vector{String}

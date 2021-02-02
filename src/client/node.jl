@@ -5,9 +5,16 @@ using ..Fed: Configuration, serialize_payload, deserialize_payload
 """
     Node(host, port, fit, config)
 
-`Node` is orchestrating the training on local data of the clients participating in
-the federated training. A `Node` is registerating itself to the server on startup,
+Orchestrate the training on local data of the clients participating in the
+federated training. A `Node` is registerating itself to the server on startup,
 and then wait for server requests for training on its local data.
+
+The `fit` function is called "proxied function". It should define the training
+loop and respect the following signature:
+
+    fit(weights::Vector{Float32})::Vector{Float32}
+
+Where `weights` is a flatten 1D array contianing the model parameters.
 """
 struct Node
     host::String
@@ -18,12 +25,14 @@ end
 
 
 """
-    register_to_server(node)
+    register_to_server(node::Node)
 
-Registers the `node` to the server, letting it knows that it is available to
+Register the `node` to the server, letting it knows that a node is available to
 take part in the training.
 
-[API Client] this is an HTTP client request.
+!!! info
+
+    **API Client**: this is an HTTP client request.
 """
 function register_to_server(node::Node)::HTTP.Response
     endpoint = node.config.base.serverurl * node.config.base.register_node
@@ -34,10 +43,15 @@ end
 
 
 """
-    fit_service(node, request)
+    fit_service(node::Node, request::HTTP.Request)
 
-Endpoint which fit the received weights contained in the `request` with the
-node's local data, and return the updated weights to the caller.
+Fit the received weights contained in the `request` with the node's local data,
+and return the updated weights to the caller. This function is calling the
+"proxied function" `fit` from the `Node`.
+
+!!! info
+
+    **API Endpoint**: this is an HTTP client endpoint.
 """
 function fit_service(node::Node, request::HTTP.Request)::HTTP.Response
     weights = deserialize_payload(node.config.payload_serde, request.body, "http://127.0.0.1:9090")
@@ -45,4 +59,3 @@ function fit_service(node::Node, request::HTTP.Request)::HTTP.Response
     payload = serialize_payload(node.config.payload_serde, weights)
     return HTTP.Response(200, payload)
 end
-

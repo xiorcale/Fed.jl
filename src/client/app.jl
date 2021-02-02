@@ -4,9 +4,9 @@ using HTTP
 
 
 """
-    build_router(node)
+    build_router(node::Node)
 
-Builds the routes to the node endpoints.
+Build the routes to the node endpoints.
 """
 function build_router(node::Node)
     router = HTTP.Router()
@@ -23,7 +23,7 @@ end
 
 
 """
-    start(node)
+    start(node::Node)
 
 Start the given `node` by setting up its router, and registering it to the
 server.

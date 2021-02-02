@@ -8,8 +8,8 @@ using ..Fed: STATS, update_stats!, initialize_stats
 """
     CentralNode(host, port, weights, strategy, evaluate, config)
 
-`CentralNode` is orchestrating the entire federated learning process, handling
-the clients registration and requesting them to train on their local data.
+Orchestrate the entire federated learning process. It handles the clients
+registration and requests them to train on their local data.
 """
 struct CentralNode
     # networking
@@ -44,7 +44,7 @@ end
 
 
 """
-    fit(central_node)
+    fit(central_node::CentralNode)
 
 Fit the global model by orchestrating the federated training.
 """
@@ -95,21 +95,22 @@ end
 
 
 """
-    fit_clients(clients, payload)
+    fit_clients(endpoint::String, clients::Vector{String}, payload::Vector{UInt8})
 
-Asks each client from `clients` to train on their local data, by using the model
-weights contained in the `payload`. Returns a `Vector` where each element is the
-serialized weights of one client.
+Ask asynchronously each client from `clients` to train on their local data by
+using the model weights contained in the `payload`. Return a `Vector` where each
+element is the serialized weights of one client.
 """
 function fit_clients(
-    fit_node::String,
+    endpoint::String,
     clients::Vector{String},
     payload::Vector{UInt8}
 )::Vector{Vector{UInt8}}
     # asynchronously ask the clients subset to train, and wait on the results.
-    tasks = [@async fit_client(fit_node, client, payload) for client in clients]
+    tasks = [@async fit_client(client * endpoint, payload) for client in clients]
     wait.(tasks)
 
+    # extract the results.
     round_weights = map(task -> task.result, tasks)
 
     return round_weights
@@ -117,17 +118,15 @@ end
 
 
 """
-    fit_client(client, payload)
+    fit_client(url::String, payload::Vector{UInt8})
 
-Asks one `client` to train on its local data, by using the model weights
-contained in the `payload`. Returns the serialized updated `weights`.
+Ask one `client` to train on its local data, by using the model weights
+contained in the `payload`. Return the serialized updated `weights`.
 """
 function fit_client(
-    fit_node::String,
-    client::String,
+    url::String,
     payload::Vector{UInt8}
 )::Vector{UInt8}
-    endpoint = client *  fit_node
-    response = HTTP.request("POST", endpoint, [], payload)
+    response = HTTP.request("POST", url, [], payload)
     return response.body
 end

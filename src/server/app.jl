@@ -3,9 +3,9 @@ using HTTP
 
 
 """
-    build_router(central_node)
+    build_router(central_node::CentralNode)
 
-Builds the routes to the central node endpoints.
+Build the routes to the central node endpoints.
 """
 function build_router(central_node::CentralNode)::HTTP.Router
     router = HTTP.Router()
@@ -22,9 +22,9 @@ end
 
 
 """
-    start_server()
+    start(central_node::CentralNode)
 
-Start a Fed.jl HTTP server.
+Start a `Fed.jl` HTTP server.
 """
 function start(central_node::CentralNode)
     router = build_router(central_node)
