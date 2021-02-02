@@ -13,6 +13,6 @@ makedocs(
             "Tools" => "serde/tools.md",
             "Payloads" => "serde/payloads.md"
         ],
-        "Config" => "config.md"
+        "Config" => "config.md",
     ]
 )

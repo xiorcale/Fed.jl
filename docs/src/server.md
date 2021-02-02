@@ -19,7 +19,7 @@ build_router
 start
 ```
 
-## Server
+## CentralNode
 
 Data structure containing the server's configuration and its API for
 communicating with the nodes.

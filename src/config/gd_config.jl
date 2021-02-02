@@ -2,12 +2,21 @@ using ..Serde: GDPayloadSerde, GDStaticPayloadSerde
 
 
 """
-    GDConfig(base, chunksize, fingerprint, msbsize, host, port, is_client)
+    GDConfig{T <: Unsigned}(
+        base::BaseConfig,
+        chunksize::Int,
+        fingerprint::Function,
+        msbsize::T,
+        store_host::String,
+        store_port::Int,
+        is_client::Bool
+    ) <: Configuration
 
-Compresses the payload by using a `GD Store`, producing a generally deduplicated
+Compress the payload by using a `GD Store`, producing a generally deduplicated
 `GDFile` which are exchanged between the clients and the server. This 
-configuration is making use of the GD.jl library to handle the GD logic
-(https://github.com/xiorcale/GD.jl).
+configuration instanciates a [GDPayloadSerde](@ref) and is making use of the
+[GD.jl](https://xiorcale.github.io/GD.jl/) library to handle the generalized
+deduplication logic.
 """
 struct GDConfig{T <: Unsigned} <: Configuration
     base::BaseConfig
