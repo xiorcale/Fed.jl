@@ -2,7 +2,7 @@
 
 `Fed.jl` is a framework-agnostic federated learning platform developed with
 flexibility of configuration and extensibility in mind. The library does not
-target a production environment, but rather aims to facilitate research in the
+target a production environment but rather aims to facilitate research in the
 field of federated learning. In particular, network traffic compression.
 
 In summary, the platform leverages a client/server architecture where a central
@@ -18,9 +18,10 @@ server and multiple nodes communicate through HTTP APIs.
 
 ## Getting started
 
-The server has to be launched first, and will wait on the clients before
-starting the training. The minimum number of clients that need to join before
-the server starts sending requests is specified in its `BaseConfig`.
+The server has to be launched first and will wait on the clients before starting
+the training. The minimum number of clients to wait on is specified in the
+`BaseConfig`.
+
 
 ```julia
 using Fed
@@ -99,7 +100,7 @@ Fed.Client.start(node)
 ## Available configurations for compression
 
 In the example above, we used a `VanillaConfig` which applies no compression.
-However, there are other configuration with different compression schemes which
+However, there are other configurations with different compression schemes that
 can be applied to reduce the communication cost. Their specifications are
 described in [Serde](@ref).
 

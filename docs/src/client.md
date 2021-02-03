@@ -4,7 +4,7 @@
 CurrentModule = Fed.Client
 ```
 
-The client is a microservice which exposes the infrastructure required to
+The client is a microservice that exposes the infrastructure required to
 communicate with the server. It is however independent of the machine learning
 tools. The training loop is defined externally by the user, and then is
 "proxied" by the client.
