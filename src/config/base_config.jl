@@ -1,7 +1,12 @@
 """
-    BaseConfig
+    BaseConfig(
+        serverurl::String,
+        num_comm_rounds::Int,
+        fraction_clients::Float32,
+        num_total_clients::Int
+    )
 
-Parts of the configuration which are common to any type of configuration.
+Part of the configuration which are common to any type of configuration.
 """
 struct BaseConfig
     # endpoints

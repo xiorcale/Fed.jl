@@ -2,10 +2,11 @@ using ..Serde: VanillaPayloadSerde
 
 
 """
-    VanillaConfig(base)
+    VanillaConfig(base::BaseConfig) <: Configuration
 
 Configuration for the baseline, where no compression is applied. The raw data
-are sent over the network.
+are sent over the network. This configuration instanciates a 
+[VanillaPayloadSerde](@ref).
 """
 struct VanillaConfig <: Configuration
     base::BaseConfig

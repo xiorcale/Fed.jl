@@ -2,11 +2,16 @@ using ..Serde: QDiffPayloadSerde, QDiffStaticPayloadSerde
 
 
 """
-    QDiffConfig(base, chunksize, is_client)
+    QDiffConfig{T <: Unsigned}(
+        base::BaseConfig,
+        chunksize::Int,
+        is_client::Bool
+    ) <: Configuration
 
 Apply the same quantization algorithm used by `QuantizedConfig`, but also
 further reduces the size of the paylaod by adding client-side "diff-
 deduplication", where unchanged chunks of data are not sent back to the server.
+This configuration instanciates a [QDiffPayloadSerde](@ref).
 """
 struct QDiffConfig{T <: Unsigned} <: Configuration
     base::BaseConfig

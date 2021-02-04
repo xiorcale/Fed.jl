@@ -18,7 +18,7 @@ include("app.jl")
 # --------------------------------
 
 export federated_averaging, ClientManager, length, num_available_clients, 
-    register, sample_clients, CentralNode, register_client, start
+    register, sample_clients, CentralNode, register_client, start, build_router
 
 
 end # module

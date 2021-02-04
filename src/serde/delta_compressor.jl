@@ -1,10 +1,19 @@
+"""
+    Patch{T <: Any}
 
+Data structure which contains the `diff` between two `Vector`. The second
+`Vector` can then be rebuilt by patching the first one with the `Patch`.
+"""
 struct Patch{T <: Any}
     range::Vector{UnitRange{Int32}}
     data::Vector{T}
 end
 
+"""
+    diff(old::Vector{T}, new::Vector{T}, sizeof_T::Int)
 
+Generate a `Patch` by delta compressing the difference between `old` and `new`.
+"""
 function diff(old::Vector{T}, new::Vector{T}, sizeof_T::Int)::Patch{T} where T <: Any
     min_range_dist = (2 * sizeof(Int32)) / sizeof_T - 1
     range = Vector{UnitRange{Int32}}()
@@ -38,6 +47,11 @@ function diff(old::Vector{T}, new::Vector{T}, sizeof_T::Int)::Patch{T} where T <
 end
 
 
+"""
+    patch(old::Vector{T}, patch::Patch{T})
+
+Apply `patch` to `old`.
+"""
 function patch(old::Vector{T}, patch::Patch{T})::Vector{T} where T <: Any
     patched = similar(old)
 

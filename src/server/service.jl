@@ -2,10 +2,14 @@ using HTTP
 
 
 """
-    register_client!(service, req)
+    register_client!(cm::ClientManager, req::HTTP.Request)
 
-Endpoint which register a new client in the `ClientManager`.
-The body of the request should contain the client URL.
+Register a new client in the `ClientManager`. The body of the request should
+contain the client URL: `http://hostname:port`.
+
+!!! info
+
+    **API Endpoint**: this is an HTTP server endpoint.
 """
 function register_client!(cm::ClientManager, req::HTTP.Request)::HTTP.Response
     client_url = String(req.body)
