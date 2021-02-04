@@ -16,3 +16,7 @@ makedocs(
         "Config" => "config.md",
     ]
 )
+
+deploydocs(
+    repo = "github.com/xiorcale/Fed.jl.git"
+)
